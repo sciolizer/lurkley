@@ -4,7 +4,38 @@ var trs80 = (function() {
   var bs = {
     _next: function(n) { if (next == null) { next = n; } },
     _quit: function() { quit = true; },
+    assign: null,
+    assignArr: null,
+    circle: null,
     clear: function(n) { console.log("clear"); }
+    color: null,
+    dim: null,
+    draw: null,
+    for: null,
+    get: null,
+    getTo: null,
+    gosub: null,
+    goto: null,
+    line: null,
+    lineTo: null,
+    next: null,
+    onGoto: null,
+    onGosub: null,
+    paint: null,
+    pcls: null,
+    play: null,
+    pmode: null,
+    poke: null,
+    pset: null,
+    put: null,
+    putTo: null,
+    return: null,
+    screen: null,
+    sound: null,
+    recall: null,
+    recallArr: null,
+    inkey: null,
+    len: null
   };
   var step = function() {
     if (next == null) {
