@@ -1,5 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Main where
+module Compile where
 
 import Control.Applicative hiding ((<|>), many)
 import Control.Monad
@@ -9,10 +9,10 @@ import Text.Parsec.Expr
 import Text.Parsec.Language
 import qualified Text.Parsec.Token as Lexer
 
-main = do
+parseFile = do
   src <- readFile "LURKLEY.BASIC"
   let contents = lineStart "" (lines src)
-  print $ (map parseBasicLine contents)
+  return (map parseBasicLine contents)
 
 lineStart l [] = [l]
 lineStart l (x:xs) | length x < 32 = blank (l++x) xs
