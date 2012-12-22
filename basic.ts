@@ -139,23 +139,29 @@ var trs80 = (function() {
       if (ind < 0 || ind >= a.length) throw ("array out of bounds: " + arrName + "[" + ind + "]")
       return a[ind];
     },
-    len: function(s) { console.log("len"); },
-    isEqual: function(e1, e2) { console.log("isEqual"); },
-    isUnequal: function(e1, e2) { console.log("isUnequal"); },
-    isLessThan: function(e1, e2) { console.log("isLessThan"); },
-    isLessThanOrEqual: function(e1, e2) { console.log("isLessThanOrEqual"); },
-    isGreaterThan: function(e1, e2) { console.log("isGreaterThan"); },
+    len: function(s) { return s.length; },
+    isEqual: function(e1, e2) { return e1 == e2; },
+    isUnequal: function(e1, e2) { return e1 != e2; },
+    isLessThan: function(e1, e2) { return e1 < e2; },
+    isLessThanOrEqual: function(e1, e2) { return e1 <= e2; },
+    isGreaterThan: function(e1, e2) { return e1 > e2; },
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
     inkey: function() { console.log("inkey"); },
-    chr: function(i) { console.log("chr"); },
+    chr: function(i) { return String.fromCharCode(i); },
     instr: function(haystack, needle) { console.log("instr"); },
-    int: function(v) { console.log("int"); },
-    left: function(str, length) { console.log("left"); },
-    mid: function(str, start, length) { console.log("mid"); },
+    int: function(v) { return Math.round(v - 0.5); },
+    left: function(str, length) { return str.substring(0, length); },
+    mid: function(str, start, length) { return str.substring(start, start + length); },
     rnd: function(i) { console.log("rnd"); },
-    str: function(i) { console.log("str"); },
-    string: function(count, num) { console.log("string"); },
-    val: function(str) { console.log("val"); },
+    str: function(i) { return "" + i; },
+    string: function(count, num) {
+      var ret = "";
+      for (var i = 0; i < num; i++) {
+        ret = ret + String.fromCharCode(num);
+      }
+      return ret;
+    },
+    val: function(str) { return parseInt(str); }
   };
   var step = function() {
     if (next == null) {
