@@ -62,6 +62,8 @@ var trs80 = (function() {
       if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
       onNext = function(n) {
         forStack.push([varName, start, end, step, n]);
+        console.log("starting for loop");
+        console.log(forStack.slice(0));
         next = n;
       };
       memory.numbers[varName] = start;
@@ -78,13 +80,17 @@ var trs80 = (function() {
     line: function(x1, y1, x2, y2, psetOrPreset, bf) { console.log("line"); },
     lineTo: function(x2, y2, psetOrPreset, bf) { console.log("lineTo"); },
     next: function(varNameOrEmpty) {
+      console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
       do {
+        console.log("popping off of for stack");
+        console.log(forStack.slice(0));
         recent = forStack.pop();
         if (!recent) {
           throw "popped off for stack";
         }
-      } while (varNameOrEmpty == "" || varNameOrEmpty == recent[0]);
+      } while (varNameOrEmpty != "" && varNameOrEmpty != recent[0]);
+      console.log("found a match for the variable name");
       var varName = recent[0];
       var current = recent[1];
       var end = recent[2];
@@ -95,7 +101,9 @@ var trs80 = (function() {
       if ((step > 0 && newval > end) || (step < 0 && newval < end)) {
         ; // loop is done
       } else {
+        console.log("pushing back onto for stack");
         forStack.push([varName, newval, end, step, loopback]);
+        console.log(forStack.slice(0));
         next = loopback;
       }
     },
