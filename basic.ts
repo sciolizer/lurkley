@@ -2,7 +2,7 @@ var trs80 = (function() {
   var next = null;
   var quit = false;
   var bs = {
-    _next: function(n) { if next == null { next = n; } },
+    _next: function(n) { if (next == null) { next = n; } },
     _quit: function() { quit = true; },
     clear: function(n) { console.log("clear"); }
   };
