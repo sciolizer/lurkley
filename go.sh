@@ -1,1 +1,1 @@
-ghc --make Compile.hs && ./Compile
+ghc --make WriteTypeScript && ./WriteTypeScript

@@ -30,12 +30,12 @@ wBasicLine (BasicLine ln cmds) nextLn = go (zip cmds [0..]) where
         w "basic._next(program.line"
         if null cmds
           then do w (show nln)
-                  w "_0"
+                  w "_0); },\n"
           else do w (show ln)
                   w "_"
                   w (show (suffix + 1))
-        w "); },\n"
-        go cmds
+                  w "); },\n"
+                  go cmds
 
 orElse :: Maybe Expr -> Integer -> W ()
 orElse mb x = wExpr (fromMaybe (LiteralNumber (Left x)) mb)
@@ -96,13 +96,17 @@ lineMode LineLine = ""
 lineMode LineBox = "b"
 lineMode LineBoxFilled = "bf"
 
-wBasic :: String -> [W ()] -> W ()
-wBasic method args = do
+wBasicExpr :: String -> [W ()] -> W ()
+wBasicExpr method args = do
   w "basic."
   w method
   w "("
   sequence_ (intersperse (w ", ") args) 
-  w "); "
+  w ")"
+
+wBasic method args = do
+  wBasicExpr method args
+  w "; "
 
 wArray arr = do
   w "["
@@ -127,15 +131,15 @@ wBinary we op l r = do
   w ")"
 
 wComparison cmp l r = z where
-  z = wBasic (name cmp) (map wExpr [l, r])
+  z = wBasicExpr (name cmp) (map wExpr [l, r])
   name cmp = downcase (show cmp)
   downcase "" = ""
   downcase (x:xs) = toLower x : xs
 
 wExpr e =
   case e of
-    Variable s Nothing -> wBasic "recall" [w (show s)]
-    Variable s (Just ind) -> wBasic "recallArr" [w (show s), wExpr ind]
+    Variable s Nothing -> wBasicExpr "recall" [w (show s)]
+    Variable s (Just ind) -> wBasicExpr "recallArr" [w (show s), wExpr ind]
     LiteralString s -> w (show s)
     LiteralNumber (Left i) -> w (show i)
     LiteralNumber (Right f) -> w (show f)
@@ -143,9 +147,9 @@ wExpr e =
     Subtract e1 e2 -> wBinary wExpr "-" e1 e2
     Multiply e1 e2 -> wBinary wExpr "*" e1 e2
     Divide e1 e2 -> wBinary wExpr "/" e1 e2
-    Inkey -> wBasic "inkey" []
-    Len var -> wBasic "len" [w (show var)]
-    Function bi args -> wBasic (builtInLib bi) (map wExpr args)
+    Inkey -> wBasicExpr "inkey" []
+    Len var -> wBasicExpr "len" [w (show var)]
+    Function bi args -> wBasicExpr (builtInLib bi) (map wExpr args)
 
 builtInLib :: BuiltIn -> String
 builtInLib bi = z where
