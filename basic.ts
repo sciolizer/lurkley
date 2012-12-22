@@ -7,7 +7,7 @@ var trs80 = (function() {
     assign: null,
     assignArr: null,
     circle: null,
-    clear: function(n) { console.log("clear"); }
+    clear: function(n) { console.log("clear"); },
     color: null,
     dim: null,
     draw: null,
