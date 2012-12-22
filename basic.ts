@@ -9,12 +9,16 @@ var trs80 = (function() {
     stringArrays: { }
   };
   var forStack = []; // [(String, Int, Int, Int, Function)]
+  var stack = [];
   var onNext = null;
   var last = function(str) { return str.substring(str.length - 1); }
   var bs = {
     _next: function(n) {
-      if (next == null) { next = n; }
-      if (onNext != null) { onNext(next); }
+      if (onNext != null) {
+        onNext(n);
+      } else {
+        if (next == null) { next = n; }
+      }
       onNext = null;
     },
     _quit: function() { quit = true; },
@@ -56,14 +60,20 @@ var trs80 = (function() {
     draw: function(s) { console.log("draw"); },
     for: function(varName, start, end, step) {
       if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
-      onNext = function(next) {
-        forStack.push([varName, start, end, step, next]);
+      onNext = function(n) {
+        forStack.push([varName, start, end, step, n]);
+        next = n;
       };
       memory.numbers[varName] = start;
     },
     get: function(x, y, a1, a2, arrName) { console.log("get"); },
     // getTo: function() { console.log("getTo"); },
-    gosub: function(i) { console.log("gosub"); },
+    gosub: function(i) {
+      onNext = function(n) {
+        stack.push(n);
+        next = pg["line" + i + "_0"];
+      };
+    },
     goto: function(i) { next = pg["line" + i + "_0"]; },
     line: function(x1, y1, x2, y2, psetOrPreset, bf) { console.log("line"); },
     lineTo: function(x2, y2, psetOrPreset, bf) { console.log("lineTo"); },
@@ -71,6 +81,9 @@ var trs80 = (function() {
       var recent;
       do {
         recent = forStack.pop();
+        if (!recent) {
+          throw "popped off for stack";
+        }
       } while (varNameOrEmpty == "" || varNameOrEmpty == recent[0]);
       var varName = recent[0];
       var current = recent[1];
@@ -96,7 +109,14 @@ var trs80 = (function() {
     pset: function(x,y,clr) { console.log("pset"); },
     put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
     // putTo: function() { console.log("putTo"); },
-    return: function() { console.log("return"); },
+    return: function() {
+      var n = stack.pop();
+      if (n) {
+        next = n;
+      } else {
+        throw "return without gosub";
+      }
+    },
     screen: function(a1, a2) { console.log("screen"); },
     sound: function(pitch, duration) { console.log("sound"); },
     recall: function(varName) { console.log("recall"); },
