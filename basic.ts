@@ -119,8 +119,26 @@ var trs80 = (function() {
     },
     screen: function(a1, a2) { console.log("screen"); },
     sound: function(pitch, duration) { console.log("sound"); },
-    recall: function(varName) { console.log("recall"); },
-    recallArr: function(arrName, ind) { console.log("recallArr"); },
+    recall: function(varName) {
+      if (last(varName) == "$") {
+        if (!memory.strings[varName]) { memory.strings[varName] = ""; }
+        return memory.strings[varName];
+      } else {
+        if (!memory.numbers[varName]) { memory.numbers[varName] = ""; }
+        return memory.numbers[varName];
+      }
+    },
+    recallArr: function(arrName, ind) {
+      var a;
+      if (last(arrName) == "$") {
+        a = memory.stringArrays[arrName];
+      } else {
+        a = memory.numberArrays[arrName];
+      }
+      if (!a) throw ("array not dimmed: " + arrName);
+      if (ind < 0 || ind >= a.length) throw ("array out of bounds: " + arrName + "[" + ind + "]")
+      return a[ind];
+    },
     len: function(s) { console.log("len"); },
     isEqual: function(e1, e2) { console.log("isEqual"); },
     isUnequal: function(e1, e2) { console.log("isUnequal"); },
