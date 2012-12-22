@@ -148,7 +148,6 @@ wExpr e =
     Multiply e1 e2 -> wBinary wExpr "*" e1 e2
     Divide e1 e2 -> wBinary wExpr "/" e1 e2
     Inkey -> wBasicExpr "inkey" []
-    Len var -> wBasicExpr "len" [w (show var)]
     Function bi args -> wBasicExpr (builtInLib bi) (map wExpr args)
 
 builtInLib :: BuiltIn -> String

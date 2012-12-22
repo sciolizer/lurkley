@@ -89,11 +89,10 @@ data Expr =
   | Divide Expr Expr
   | Function BuiltIn [Expr]
   | Inkey
-  | Len String
   deriving (Eq, Ord, Read, Show)
 
 data BuiltIn =
-  ChrS | Instr | Int | LeftS | MidS | Rnd | StrS | StringS | Val
+  ChrS | Instr | Int | LeftS | Len | MidS | Rnd | StrS | StringS | Val
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 arity bi =
@@ -102,6 +101,7 @@ arity bi =
     Instr -> 2
     Int -> 1
     LeftS -> 2
+    Len -> 1
     MidS -> 3
     Rnd -> 1
     StrS -> 1
@@ -122,7 +122,7 @@ basicDef = haskellDef {
   Lexer.caseSensitive = True,
   Lexer.identStart = capital,
   Lexer.identLetter = capital <|> oneOf "0123456789$",
-  Lexer.reservedNames = ["AND", "CIRCLE", "CLEAR", "COLOR", {- "DATA", -} "DIM", "DRAW", "ELSE", "FOR", "GET", "GOSUB", "GOTO", "IF", "INKEY$", "LEN", "LINE", "NEXT", "ON", "OR", "PAINT", "PCLS", "PLAY", "PMODE", "POKE", "PRESET", "PSET", "PUT", "REM", "RETURN", "SCREEN", "SOUND", "STEP", "THEN", "TO"] ++ [builtInName x | x <- [minBound..maxBound]],
+  Lexer.reservedNames = ["AND", "CIRCLE", "CLEAR", "COLOR", {- "DATA", -} "DIM", "DRAW", "ELSE", "FOR", "GET", "GOSUB", "GOTO", "IF", "INKEY$", "LINE", "NEXT", "ON", "OR", "PAINT", "PCLS", "PLAY", "PMODE", "POKE", "PRESET", "PSET", "PUT", "REM", "RETURN", "SCREEN", "SOUND", "STEP", "THEN", "TO"] ++ [builtInName x | x <- [minBound..maxBound]],
   Lexer.reservedOpNames = ["+","-","*","/","=","<>","<",">","=<","=>"]
   }
 lexer = Lexer.makeTokenParser basicDef
@@ -361,7 +361,7 @@ pExpr = buildExpressionParser table pTerm <?> "expression" where
            [b "+" Add, b "-" Subtract]]
   b op cons = Infix (pReservedOp op >> return cons) AssocLeft
 
-pTerm = pParens pExpr <|> pLiteralString <|> pLiteralNumber <|> pVariable <|> pInkey <|> pLen <|> foldl1 (<|>) [pBuiltIn bi | bi <- [minBound..maxBound]] <?> "term"
+pTerm = pParens pExpr <|> pLiteralString <|> pLiteralNumber <|> pVariable <|> pInkey <|> foldl1 (<|>) [pBuiltIn bi | bi <- [minBound..maxBound]] <?> "term"
 
 pLiteralString = LiteralString <$> pStringLiteral
 
@@ -381,8 +381,6 @@ pBuiltIn bi = do
     else fail $ "wrong number of args for " ++ name ++ ": " ++ show exps
 
 pInkey = pReserved "INKEY$" >> return Inkey
-
-pLen = pReserved "LEN" >> (pParens $ Len <$> pIdentifier)
 
 pVariable = Variable <$> pIdentifier <*> optionMaybe (pParens pExpr)
 
