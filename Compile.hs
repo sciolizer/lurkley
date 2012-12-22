@@ -206,7 +206,7 @@ pData = do
 
 pDim = do
   pReserved "DIM"
-  decls <- many ((,) <$> pIdentifier <*> pParens (pCommaSep1 pNatural))
+  decls <- pCommaSep1 ((,) <$> pIdentifier <*> pParens (pCommaSep1 pNatural))
   return (Dim decls)
 
 pDraw = pReserved "DRAW" >> (Draw <$> pExpr)

@@ -8,24 +8,84 @@ var trs80 = (function() {
     numberArrays: { },
     stringArrays: { }
   };
+  var forStack = []; // [(String, Int, Int, Int, Function)]
+  var onNext = null;
+  var last = function(str) { return str.substring(str.length - 1); }
   var bs = {
-    _next: function(n) { if (next == null) { next = n; } },
+    _next: function(n) {
+      if (next == null) { next = n; }
+      if (onNext != null) { onNext(next); }
+      onNext = null;
+    },
     _quit: function() { quit = true; },
-    assign: function(varName, value) { console.log("assign"); },
-    assignArr: function(arrName, arrIndex, value) { console.log("assignArr"); },
+    assign: function(varName, value) {
+      if (last(varName) == "$") {
+        memory.numbers[varName] = value;
+      } else {
+        memory.strings[varName] = value;
+      }
+    },
+    assignArr: function(arrName, arrIndex, value) {
+      if (last(arrName) == "$") {
+        memory.numberArrays[arrName][arrIndex] = value;
+      } else {
+        memory.stringArrays[arrName][arrIndex] = value;
+      }
+    },
     circle: function(x, y, rad, a1, a2, a3, a4) { console.log("circle"); },
     clear: function(n) { console.log("clear"); },
     color: function(a1, a2) { console.log("color"); },
-    dim: function(arrName, sizes) { console.log("dim"); },
+    dim: function(arrName, sizes) {
+      if (arrName == "A") {
+        ; // hack: ignore A, which is only used for get and put
+      } else {
+        if (sizes.length != 1) {
+          throw "dim only implemented for one-dimensional arrays";
+        }
+        var size = sizes[0];
+        if (last(arrName) == "$") {
+          throw "dim not implemented for string arrays";
+        } else {
+          memory.numberArrays[arrName] = [];
+          for (var i = 0; i < size; i++) {
+            memory.numberArrays[arrName].push(0)
+          }
+        }
+      }
+    },
     draw: function(s) { console.log("draw"); },
-    for: function(varName, start, end, step) { console.log("for"); },
+    for: function(varName, start, end, step) {
+      if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
+      onNext = function(next) {
+        forStack.push([varName, start, end, step, next]);
+      };
+      memory.numbers[varName] = start;
+    },
     get: function(x, y, a1, a2, arrName) { console.log("get"); },
     // getTo: function() { console.log("getTo"); },
     gosub: function(i) { console.log("gosub"); },
     goto: function(i) { next = pg["line" + i + "_0"]; },
     line: function(x1, y1, x2, y2, psetOrPreset, bf) { console.log("line"); },
     lineTo: function(x2, y2, psetOrPreset, bf) { console.log("lineTo"); },
-    next: function(varNameOrEmpty) { console.log("next"); },
+    next: function(varNameOrEmpty) {
+      var recent;
+      do {
+        recent = forStack.pop();
+      } while (varNameOrEmpty == "" || varNameOrEmpty == recent[0]);
+      var varName = recent[0];
+      var current = recent[1];
+      var end = recent[2];
+      var step = recent[3];
+      var loopback = recent[4];
+      var newval = current + step;
+      memory.numbers[varName] = newval;
+      if ((step > 0 && newval > end) || (step < 0 && newval < end)) {
+        ; // loop is done
+      } else {
+        forStack.push([varName, newval, end, step, loopback]);
+        next = loopback;
+      }
+    },
     onGoto: function(varName, targets) { console.log("onGoto"); },
     onGosub: function(varName, targets) { console.log("onGosub"); },
     paint: function(x, y, clr, a1) { console.log("paint"); },
