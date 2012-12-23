@@ -319,12 +319,15 @@ var trs80 = (function() {
       });
     },
     for: function(varName, start, end, step) {
-      // console.log("for: " + varName + ", " + start + ", " + end + ", " + step);
-      if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
+      console.log("for: " + varName + ", " + start + ", " + end + ", " + step);
+      if ((step > 0 && end < start) || (step < 0 && end > start)) {
+        console.log("void for loop");
+        return;
+      }
       onNext = function(n) {
         forStack.push([varName, start, end, step, n]);
-        // console.log("starting for loop: " + varName);
-        // console.log(forStack.slice(0));
+        console.log("starting for loop: " + varName);
+        console.log(forStack.slice(0));
         next = n;
       };
       memory.numbers[varName] = start;
@@ -391,9 +394,12 @@ var trs80 = (function() {
       // console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
       do {
-        // console.log("popping off of for stack");
-        // console.log(forStack.slice(0));
+        console.log("popping off of for stack: " + varNameOrEmpty);
+        console.log(forStack.slice(0));
         recent = forStack.pop();
+        console.log("found variable: " + recent);
+        console.log("it's going to take me to ");
+        console.log(loopback);
         if (!recent) {
           throw ("popped off for stack: " + varNameOrEmpty);
         }
@@ -475,16 +481,18 @@ var trs80 = (function() {
       if (last(varName) == "$") {
         var ret = memory.strings[varName];
         if (typeof ret != typeof "") {
-          throw ("tried to recall: " + varName);
-          //memory.strings[varName] = "";
+          // throw ("tried to recall: " + varName);
+          memory.strings[varName] = "";
+          ret = "";
         }
         console.log(varName + ": " + ret);
         return ret;
       } else {
         var ret = memory.numbers[varName];
         if (typeof ret != typeof 0) {
-          throw ("tried to recall: " + varName);
-          // memory.numbers[varName] = "";
+          // throw ("tried to recall: " + varName);
+          memory.numbers[varName] = 0;
+          ret = 0;
         }
         console.log(varName + ": " + ret);
         return ret;
@@ -607,7 +615,7 @@ var trs80 = (function() {
     }
     var n = next;
     next = null;
-    // console.log(n);
+    console.log(n);
     n(bs);
     if (quit) {
       console.log("done");
