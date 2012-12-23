@@ -81,6 +81,7 @@ wCommand cmd prefix =
       case elseC of
         Nothing -> return tExtra
         Just z -> do
+          w "else { "
           eExtra <- branch "_else" z
           return (tExtra ++ eExtra)
     Line Nothing (x2,y2) dm lm -> wBasic "lineTo" [wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))] >> return []
