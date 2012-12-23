@@ -426,9 +426,7 @@ var trs80 = (function() {
             throw "suspencion popped all the way off";
           }
         } while (varNameOrEmpty != "" && varNameOrEmpty != topS);
-        if (suspended()) {
-          return;
-        }
+        return;
       }
       // console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
