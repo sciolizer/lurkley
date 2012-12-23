@@ -276,35 +276,46 @@ var trs80 = (function() {
       };
     },
     goto: function(i) { next = pg["line" + i + "_0"]; },
-    line: function(x1, y1, x2, y2, psetOrPreset, bf) {
-      if (bf == "") {
-        process(function(p) {
-          var color = psetPreset(psetOrPreset);
+    line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
+      process(function(p) {
+        var color = psetPreset(psetOrPreset);
+        var x1;
+        var y1;
+        if (typeof xorig == typeof undefined) {
+          x1 = drawing.lastX;
+        } else {
+          x1 = xorig;
+        }
+        if (typeof yorig == typeof undefined) {
+          y1 = drawing.lastY;
+        } else {
+          y1 = yorig;
+        }
+        if (bf == "") {
           p.stroke.apply(p, color);
           p.fill.apply(p, color); // do I need both of these?
           p.line(x1, y1, x2, y2);
           p.noStroke();
-          drawing.lastX = x2;
-          drawing.lastY = y2;
-        });
-      } else {
-        throw ("line not implemented for b or bf: " + bf);
-      }
+        } else if (bf == "b") {
+          p.noFill();
+          p.stroke.apply(p, color);
+          p.rect(x1, y1, x2 - x1, y2 - x1)
+          p.noStroke();
+        } else if (bf == "bf") {
+          p.fill.apply(p, color);
+          p.stroke.apply(p, color);
+          p.rect(x1, y1, x2 - x1, y2 - x1)
+          p.noStroke();
+          p.noFill();
+        } else {
+          throw ("line not implemented for bf: " + bf);
+        }
+        drawing.lastX = x2;
+        drawing.lastY = y2;
+      });
     },
     lineTo: function(x2, y2, psetOrPreset, bf) {
-      if (bf == "") {
-        process(function(p) {
-          var color = psetPreset(psetOrPreset);
-          p.stroke.apply(p, color);
-          p.fill.apply(p, color); // do I need both of these?
-          p.line(drawing.lastX, drawing.lastY, x2, y2);
-          p.noStroke();
-          drawing.lastX = x2;
-          drawing.lastY = y2;
-        });
-      } else {
-        throw ("line not implemented for b or bf: " + bf);
-      }
+      bs.line(undefined, undefined, x2, y2, psetOrPreset, bf);
     },
     next: function(varNameOrEmpty) {
       // console.log("attempting next with variable: " + varNameOrEmpty);
