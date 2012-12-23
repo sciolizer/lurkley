@@ -100,11 +100,26 @@ var trs80 = (function() {
     }
     throw ("unrecognized color: " + i);
   };
-  var psetPreset = function(which) {
+  var setColor = function(p, clr) {
+    var c;
+    if (typeof clr == typeof undefined) {
+      c = drawing.foregroundColor;
+    } else {
+      drawing.foregroundColor = clr;
+      c = clr;
+    }
+    p.stroke.apply(p, cocoColor(c));
+    p.noFill();
+  };
+  var psetPreset = function(which, p, colorCallback) {
     if (which == "pset") {
-      return cocoColor(drawing.foregroundColor);
+      setColor(p, drawing.foregroundColor);
+      colorCallback(cocoColor(drawing.foregroundColor));
     } else if (which == "preset") {
-      return cocoColor(drawing.backgroundColor);
+      var f = drawing.foregroundColor;
+      setColor(p, drawing.backgroundColor);
+      colorCallback(cocoColor(drawing.backgroundColor));
+      setColor(p, f);
     } else {
       throw ("unrecognized pset/preset: " + which);
     }
@@ -173,11 +188,8 @@ var trs80 = (function() {
         if (typeof clr == typeof undefined) {
           c = drawing.foregroundColor;
         }
-        p.stroke.apply(p, cocoColor(c));
-        // p.fill.apply(p, cocoColor(c)); // do I need both of these?
-        p.noFill();
+        setColor(p, clr);
         p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
-        p.noStroke();
       });
     },
     clear: function(n) {
@@ -189,8 +201,7 @@ var trs80 = (function() {
       boundCheck("color foreground", foreground, 0, 8);
       boundCheck("color background", background, 0, 8);
       process(function(p) {
-        // console.log("color: " + drawing.foregroundColor);
-        drawing.foregroundColor = foreground;
+        setColor(p, foreground);
         drawing.backgroundColor = background;
       });
     },
@@ -220,6 +231,7 @@ var trs80 = (function() {
       if (suspended()) return;
       process(function(p) {
         console.log("drawing: " + s);
+        setColor(p, undefined);
         drawStr(cocoColor, drawing, s)(p);
       });
     },
@@ -270,40 +282,32 @@ var trs80 = (function() {
       boundCheck("line x2", x2, 0, MAX_X);
       boundCheck("line y2", y2, 0, MAX_Y);
       process(function(p) {
-        var color = psetPreset(psetOrPreset);
-        var x1;
-        var y1;
-        if (typeof xorig == typeof undefined) {
-          x1 = drawing.lastX;
-        } else {
-          x1 = xorig;
-        }
-        if (typeof yorig == typeof undefined) {
-          y1 = drawing.lastY;
-        } else {
-          y1 = yorig;
-        }
-        if (bf == "") {
-          p.stroke.apply(p, color);
-          p.fill.apply(p, color); // do I need both of these?
-          p.line(x1, y1, x2, y2);
-          p.noStroke();
-        } else if (bf == "b") {
-          p.noFill();
-          p.stroke.apply(p, color);
-          p.rect(x1, y1, x2 - x1, y2 - x1)
-          p.noStroke();
-        } else if (bf == "bf") {
-          p.fill.apply(p, color);
-          p.stroke.apply(p, color);
-          p.rect(x1, y1, x2 - x1, y2 - x1)
-          p.noStroke();
-          p.noFill();
-        } else {
-          throw ("line not implemented for bf: " + bf);
-        }
-        drawing.lastX = x2;
-        drawing.lastY = y2;
+        psetPreset(psetOrPreset, p, function(color) {
+          var x1;
+          var y1;
+          if (typeof xorig == typeof undefined) {
+            x1 = drawing.lastX;
+          } else {
+            x1 = xorig;
+          }
+          if (typeof yorig == typeof undefined) {
+            y1 = drawing.lastY;
+          } else {
+            y1 = yorig;
+          }
+          if (bf == "") {
+            p.line(x1, y1, x2, y2);
+          } else if (bf == "b") {
+            p.rect(x1, y1, x2 - x1, y2 - x1)
+          } else if (bf == "bf") {
+            p.fill.apply(p, color);
+            p.rect(x1, y1, x2 - x1, y2 - x1)
+          } else {
+            throw ("line not implemented for bf: " + bf);
+          }
+          drawing.lastX = x2;
+          drawing.lastY = y2;
+        });
       });
     },
     lineTo: function(x2, y2, psetOrPreset, bf) {
@@ -365,6 +369,7 @@ var trs80 = (function() {
       };
     },
     paint: function(x, y, clr, a1) {
+    // Ideas at http://stackoverflow.com/questions/2106995/how-can-i-perform-flood-fill-with-html-canvas
       if (suspended()) return;
       console.log("paint");
     },
@@ -392,7 +397,9 @@ var trs80 = (function() {
     pset: function(x,y,clr) {
       if (suspended()) return;
       process(function(p) {
-        console.log("pset");
+        // console.log("pset");
+        setColor(p, clr);
+        p.point(x,y);
         drawing.lastX = x;
         drawing.lastY = y;
       });
