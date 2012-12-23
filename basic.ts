@@ -1,4 +1,5 @@
 declare var processingQueue;
+var PI = 3.14159265358;
 var trs80 = (function() {
   var next = null;
   var quit = false;
@@ -94,9 +95,9 @@ var trs80 = (function() {
         if (typeof clr == typeof undefined) {
           c = drawing.foregroundColor;
         }
-        p.stroke();
-        p.fill.apply(p, cocoColor(c));
-        p.ellipse(x, y, rad, ratio * rad);
+        p.stroke.apply(p, cocoColor(c));
+        p.fill.apply(p, cocoColor(c)); // do I need both of these?
+        p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
         p.noStroke();
       });
     },
@@ -152,8 +153,8 @@ var trs80 = (function() {
       if (bf == "") {
         process(function(p) {
           var color = psetPreset(psetOrPreset);
-          p.stroke();
-          p.fill.apply(p, color);
+          p.stroke.apply(p, color);
+          p.fill.apply(p, color); // do I need both of these?
           p.line(x1, y1, x2, y2);
           p.noStroke();
           drawing.lastX = x2;
@@ -167,8 +168,8 @@ var trs80 = (function() {
       if (bf == "") {
         process(function(p) {
           var color = psetPreset(psetOrPreset);
-          p.stroke();
-          p.fill.apply(p, color);
+          p.stroke.apply(p, color);
+          p.fill.apply(p, color); // do I need both of these?
           p.line(drawing.lastX, drawing.lastY, x2, y2);
           p.noStroke();
           drawing.lastX = x2;
@@ -252,7 +253,7 @@ var trs80 = (function() {
       process(function(p) {
         if (gort == 0) {
           drawing.screen = "text";
-        } else if (gort == 1) {
+        } else if (gort == 1 || gort == 2 || gort == 3) { // todo
           drawing.screen = "graphics";
         } else {
           throw ("invalid screen mode: " + gort);
