@@ -23,7 +23,7 @@ var trs80 = (function() {
     },
     _quit: function() { quit = true; },
     assign: function(varName, value) {
-      console.log("assign: " + varName + " = " + value);
+      // console.log("assign: " + varName + " = " + value);
       if (typeof value == typeof undefined) {
         throw "attempted to assign undefined";
       }
@@ -117,14 +117,14 @@ var trs80 = (function() {
     },
     onGoto: function(varName, targets) {
       var index = memory.numbers[varName];
-      if (index != 0 || !index) throw ("bad onGoto: " + varName);
+      if (index != 0 && !index) throw ("bad onGoto: " + varName);
       if (index < 1 || index > targets.length) throw ("out of range onGoto: " + index);
       next = pg["line" + targets[index - 1] + "_0"]; // on goto is 1 based
     },
     onGosub: function(varName, targets) {
       var index = memory.numbers[varName];
-      console.log("index");
-      console.log(index);
+      //console.log("index");
+      //console.log(index);
       if (index != 0 && !index) throw ("bad onGosub: " + varName);
       if (index < 1 || index > targets.length) throw ("out of range onGosub: " + index);
       onNext = function(n) {
