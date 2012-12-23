@@ -1,7 +1,7 @@
 declare var processingQueue;
 var PI = 3.14159265358;
 var MAX_X = 511; // 255;
-var MAX_Y = 192;
+var MAX_Y = 384; // 192;
 var memory = {
   numbers: { },
   strings: { },
