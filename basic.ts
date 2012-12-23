@@ -488,9 +488,12 @@ var trs80 = (function() {
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
     inkey: function() {
       if (keyQueue.length == 0) {
+        // console.log("returning \"\"");
         return "";
       } else {
-        return String.fromCharCode(keyQueue.pop());
+        var ret = String.fromCharCode(keyQueue.pop());
+        console.log("returning: " + ret);
+        return ret;
       }
     },
     asc: function(c) {
