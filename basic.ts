@@ -1,4 +1,5 @@
 declare var processingQueue;
+declare var drawStr;
 var PI = 3.14159265358;
 var MAX_X = 511; // 255;
 var MAX_Y = 384; // 192;
@@ -214,7 +215,9 @@ var trs80 = (function() {
     },
     draw: function(s) {
       if (suspended()) return;
-      drawStr(cocoColor, drawing, s)();
+      process(function(p) {
+        drawStr(cocoColor, drawing, s)(p);
+      });
     },
     for: function(varName, start, end, step) {
       if (suspended()) {

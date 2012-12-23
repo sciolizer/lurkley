@@ -1,5 +1,5 @@
 declare var processingQueue;
-window.drawStr = function(cocoColor, drawing, s) {
+var drawStr = function(cocoColor, drawing, s) {
   return function(p) {
     var blank = false;
     var distance = 0;
