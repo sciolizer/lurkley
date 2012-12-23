@@ -1,5 +1,7 @@
 declare var processingQueue;
 var PI = 3.14159265358;
+var MAX_X = 255;
+var MAX_Y = 192;
 var trs80 = (function() {
   var next = null;
   var quit = false;
@@ -17,9 +19,41 @@ var trs80 = (function() {
   var process = function(f) {
     processingQueue.unshift(f);
   };
+  var checkComparison(str, l, r) {
+    if (typeof l == typeof undefined) {
+      throw ("left of " + str + " is undefined");
+    }
+    if (typeof r == typeof undefined) {
+      throw ("right of " + str + " is undefined");
+    }
+    if (typeof l != typeof r) {
+      throw (str + " types are not the same");
+    }
+  };
+  var checkNumeric(str, l, r) {
+    if (typeof l != typeof 0) {
+      throw ("left of " + str + " not a number: " + l);
+    }
+    if (typeof r != typeof 0) {
+      throw ("right of " + str + " not a number: " + r);
+    }
+  };
+  var boundCheck(str, val, min, max) {
+    if (typeof val != typeof 0) {
+      throw (str + " not a number")
+    }
+    if (val < min) {
+      throw (str + " less than min of " + min);
+    }
+    if (val > max) {
+      throw (str + " less than max of " + max);
+    }
+  };
   var findLine = function(varName, targets) {
     var index = memory.numbers[varName];
-    if (index != 0 && !index) throw ("bad onGoto/onGosub: " + varName);
+    if (typeof index == typeof undefined) {
+      throw ("bad onGoto/onGosub: " + varName);
+    }
     if (index < 1 || index > targets.length) throw ("out of range onGoto/onGosub: " + index);
     return pg["line" + targets[index - 1] + "_0"]; // is 1 based
   };
@@ -89,13 +123,36 @@ var trs80 = (function() {
       if (typeof value == typeof undefined) {
         throw "attempted to assignArr undefined";
       }
+      var arr;
       if (last(arrName) == "$") {
-        memory.stringArrays[arrName][arrIndex] = value;
+        arr = memory.stringArrays[arrName];
       } else {
-        memory.numberArrays[arrName][arrIndex] = value;
+        arr = memory.numberArrays[arrName];
       }
+      if (typeof arr == typeof undefined) {
+        throw ("no arr with name " + arrName);
+      }
+      if (arrIndex < 0 || arrIndex >= arr.length) {
+        throw ("out of bounds array assignment: " + arrIndex)
+      }
+      arr[arrIndex] = value;
     },
     circle: function(x, y, rad, clr, ratio, start, end) { // todo: fix defaults
+      if (ratio < 0 || ratio > 4) {
+        throw ("invalid circle ratio: " + ratio)
+      }
+      if (start < 0 || start > 1) {
+        throw ("invalid circle start: " + start)
+      }
+      if (end < 0 || end > 1) {
+        throw ("invalid circle end: " + end)
+      }
+      if (x < 0 || x > MAX_X) {
+        throw ("invalid circle x: " + x)
+      }
+      if (y < 0 || y > MAX_Y) {
+        throw ("invalid circle y: " + y)
+      }
       process(function(p) {
         var c = clr;
         if (typeof clr == typeof undefined) {
@@ -109,6 +166,8 @@ var trs80 = (function() {
     },
     clear: function(n) { ; /* no-op; os handles memory management */ },
     color: function(foreground, background) {
+      boundCheck("color foreground", foreground, 0, 8);
+      boundCheck("color background", background, 0, 8);
       process(function(p) {
         drawing.foregroundColor = foreground;
         drawing.backgroundColor = background;
@@ -117,11 +176,12 @@ var trs80 = (function() {
     dim: function(arrName, sizes) {
       if (arrName == "A") {
         ; // hack: ignore A, which is only used for get and put
-      } else {
+      } else if (arrName == "B") {
         if (sizes.length != 1) {
           throw "dim only implemented for one-dimensional arrays";
         }
         var size = sizes[0];
+        boundCheck("dim size", size, 0, undefined);
         if (last(arrName) == "$") {
           throw "dim not implemented for string arrays";
         } else {
@@ -130,6 +190,8 @@ var trs80 = (function() {
             memory.numberArrays[arrName].push(0)
           }
         }
+      } else {
+        throw "unequipped to handle any array except B"
       }
     },
     draw: function(s) {
@@ -277,6 +339,14 @@ var trs80 = (function() {
     },
     goto: function(i) { next = pg["line" + i + "_0"]; },
     line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
+      if (typeof xorig != typeof undefined) {
+        boundCheck("line xorig", xorig, 0, MAX_X);
+      }
+      if (typeof yorig != typeof undefined) {
+        boundCheck("line yorig", yorig, 0, MAX_Y);
+      }
+      boundCheck("line x2", x2, 0, MAX_X);
+      boundCheck("line y2", y2, 0, MAX_Y);
       process(function(p) {
         var color = psetPreset(psetOrPreset);
         var x1;
@@ -371,15 +441,21 @@ var trs80 = (function() {
     poke: function(mem, value) {
       console.log("poke");
     },
-    pset: function(x,y,clr) { console.log("pset"); },
+    pset: function(x,y,clr) {
+      process(function(p) {
+        console.log("pset");
+        drawing.lastX = x;
+        drawing.lastY = y;
+      );
+    },
     put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
     // putTo: function() { console.log("putTo"); },
     return: function() {
       var n = stack.pop();
-      if (n) {
-        next = n;
-      } else {
+      if (typeof n == typeof undefined) {
         throw "return without gosub";
+      } else {
+        next = n;
       }
     },
     screen: function(gort, colorset) {
@@ -397,10 +473,16 @@ var trs80 = (function() {
     sound: function(pitch, duration) { console.log("sound"); },
     recall: function(varName) {
       if (last(varName) == "$") {
-        if (!memory.strings[varName]) { memory.strings[varName] = ""; }
+        if (typeof memory.strings[varName] == typeof undefined) {
+          throw ("tried to recall: " + varName);
+          //memory.strings[varName] = "";
+        }
         return memory.strings[varName];
       } else {
-        if (!memory.numbers[varName]) { memory.numbers[varName] = ""; }
+        if (typeof memory.numbers[varName] == typeof undefined) {
+          throw ("tried to recall: " + varName);
+          // memory.numbers[varName] = "";
+        }
         return memory.numbers[varName];
       }
     },
@@ -411,34 +493,108 @@ var trs80 = (function() {
       } else {
         a = memory.numberArrays[arrName];
       }
-      if (!a) throw ("array not dimmed: " + arrName);
+      if (typeof a == typeof undefined) throw ("array not dimmed: " + arrName);
       if (ind < 0 || ind >= a.length) throw ("array out of bounds: " + arrName + "[" + ind + "]")
-      return a[ind];
+      var ret = a[ind];
+      if (typeof ret == typeof undefined) {
+        throw ("retrieved undefined value at " + ind + " in " + a);
+      }
+      return ret;
     },
     len: function(s) { return s.length; },
-    isEqual: function(e1, e2) { return e1 == e2; },
-    isUnequal: function(e1, e2) { return e1 != e2; },
-    isLessThan: function(e1, e2) { return e1 < e2; },
-    isLessThanOrEqual: function(e1, e2) { return e1 <= e2; },
-    isGreaterThan: function(e1, e2) { return e1 > e2; },
+    isEqual: function(e1, e2) {
+      checkComparison("isEqual", e1, e2);
+      return e1 == e2;
+    },
+    isUnequal: function(e1, e2) {
+      checkComparison("isUnequal", e1, e2);
+      return e1 != e2;
+    },
+    isLessThan: function(e1, e2) {
+      checkNumeric("isLessThan", e1, e2);
+      return e1 < e2;
+    },
+    isLessThanOrEqual: function(e1, e2) {
+      checkNumeric("isLessThanOrEqual", e1, e2);
+      return e1 <= e2;
+    },
+    isGreaterThan: function(e1, e2) {
+      checkNumeric("isGreaterThan", e1, e2);
+      return e1 > e2;
+    },
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
     inkey: function() { console.log("inkey"); },
     asc: function(c) { return c.charCodeAt(0); },
-    chr: function(i) { return String.fromCharCode(i); },
-    instr: function(haystack, needle) { return haystack.indexOf(needle) + 1; },
-    int: function(v) { return Math.round(v - 0.5); },
-    left: function(str, length) { return str.substring(0, length); },
-    mid: function(str, start, length) { return str.substring(start + 1, start + 1 + length); },
-    rnd: function(i) { console.log("rnd"); },
-    str: function(i) { return "" + i; },
+    chr: function(i) {
+      if (typeof i != typeof 0) {
+        throw ("chr argument not a number: " + i);
+      }
+      return String.fromCharCode(i);
+    },
+    instr: function(haystack, needle) {
+      if (typeof haystack != typeof "") {
+        throw ("instr haystack not a string: " + haystack);
+      }
+      if (typeof needle != typeof "") {
+        throw ("instr needle not a string: " + needle);
+      }
+      return haystack.indexOf(needle) + 1;
+    },
+    int: function(v) {
+      if (typeof v != typeof 0) {
+        throw ("int arg not a number: " + v);
+      }
+      if (v < 0) {
+        throw ("int doesn't properly handle negatives: " + v);
+      }
+      return Math.floor(v);
+    },
+    left: function(str, length) {
+      if (typeof length != typeof 0) {
+        throw ("length in left$ not a number: " + length);
+      }
+      return str.substring(0, length);
+    },
+    mid: function(str, start, length) {
+      if (typeof start != typeof 0) {
+        throw ("start in mid$ not a number: " + start);
+      }
+      if (typeof length != typeof 0) {
+        throw ("length in mid$ not a number: " + length);
+      }
+      return str.substring(start + 1, start + 1 + length);
+    },
+    rnd: function(i) {
+      if (typeof i != typeof 0) {
+        throw ("rnd received non number: " + i);
+      }
+      return 1 + Math.floor(Math.random() * i);
+    },
+    str: function(i) {
+      if (typeof i != typeof 0) {
+        throw ("str$ received non number: " + i)
+      }
+      return "" + i;
+    },
     string: function(count, num) {
+      if (typeof count != typeof 0) {
+        throw ("count in string$ is not a number: " + count);
+      }
+      if (typeof num != typeof 0) {
+        throw ("char code in string$ is not a number: " + num);
+      }
       var ret = "";
       for (var i = 0; i < num; i++) {
         ret = ret + String.fromCharCode(num);
       }
       return ret;
     },
-    val: function(str) { return parseInt(str); }
+    val: function(str) {
+      if (typeof str != typeof "") {
+        throw ("val arg is not a string: " + str);
+      }
+      return parseInt(str);
+    }
   };
   var step = function() {
     if (next == null) {
