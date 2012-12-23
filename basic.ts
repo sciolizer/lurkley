@@ -16,6 +16,24 @@ var trs80 = (function() {
   var process = function(f) {
     processingQueue.unshift(f);
   };
+  var psetPreset = function(which) {
+    if (which == "pset") {
+      return cocoColor(drawing.foregroundColor);
+    } else if (which == "preset") {
+      return cocoColor(drawing.backgroundColor);
+    } else {
+      throw ("unrecognized pset/preset: " + which);
+    }
+  };
+  var drawing = {
+    foregroundColor: 1,
+    backgroundColor: 0,
+    mode: 3, // I think this determines resolution
+    screen: "text", // "text" or "graphics"
+    colorset: 0, // 0 or 1
+    lastX: 0,
+    lastY: 0
+  };
   var cocoColor = function(i) {
     switch (i) {
       case 0: // black
@@ -70,9 +88,25 @@ var trs80 = (function() {
         memory.numberArrays[arrName][arrIndex] = value;
       }
     },
-    circle: function(x, y, rad, a1, a2, a3, a4) { console.log("circle"); },
+    circle: function(x, y, rad, clr, ratio, start, end) { // todo: fix defaults
+      process(function(p) {
+        var c = clr;
+        if (typeof clr == typeof undefined) {
+          c = drawing.foregroundColor;
+        }
+        p.stroke();
+        p.fill.apply(p, cocoColor(c));
+        p.ellipse(x, y, rad, ratio * rad);
+        p.noStroke();
+      });
+    },
     clear: function(n) { ; /* no-op; os handles memory management */ },
-    color: function(a1, a2) { console.log("color"); },
+    color: function(foreground, background) {
+      process(function(p) {
+        drawing.foregroundColor = foreground;
+        drawing.backgroundColor = background;
+      });
+    },
     dim: function(arrName, sizes) {
       if (arrName == "A") {
         ; // hack: ignore A, which is only used for get and put
@@ -91,7 +125,9 @@ var trs80 = (function() {
         }
       }
     },
-    draw: function(s) { console.log("draw"); },
+    draw: function(s) {
+      console.log("draw: " + s);
+    },
     for: function(varName, start, end, step) {
       console.log("for: " + varName + ", " + start + ", " + end + ", " + step);
       if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
@@ -112,8 +148,36 @@ var trs80 = (function() {
       };
     },
     goto: function(i) { next = pg["line" + i + "_0"]; },
-    line: function(x1, y1, x2, y2, psetOrPreset, bf) { console.log("line"); },
-    lineTo: function(x2, y2, psetOrPreset, bf) { console.log("lineTo"); },
+    line: function(x1, y1, x2, y2, psetOrPreset, bf) {
+      if (bf == "") {
+        process(function(p) {
+          var color = psetPreset(psetOrPreset);
+          p.stroke();
+          p.fill.apply(p, color);
+          p.line(x1, y1, x2, y2);
+          p.noStroke();
+          drawing.lastX = x2;
+          drawing.lastY = y2;
+        });
+      } else {
+        throw ("line not implemented for b or bf: " + bf);
+      }
+    },
+    lineTo: function(x2, y2, psetOrPreset, bf) {
+      if (bf == "") {
+        process(function(p) {
+          var color = psetPreset(psetOrPreset);
+          p.stroke();
+          p.fill.apply(p, color);
+          p.line(drawing.lastX, drawing.lastY, x2, y2);
+          p.noStroke();
+          drawing.lastX = x2;
+          drawing.lastY = y2;
+        });
+      } else {
+        throw ("line not implemented for b or bf: " + bf);
+      }
+    },
     next: function(varNameOrEmpty) {
       // console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
@@ -160,9 +224,18 @@ var trs80 = (function() {
       };
     },
     paint: function(x, y, clr, a1) { console.log("paint"); },
-    pcls: function(a1) { console.log("pcls"); },
+    pcls: function(color) {
+      process(function(p) {
+        p.background.apply(p, cocoColor(color));
+      });
+    },
     play: function(s) { console.log("play"); },
-    pmode: function(a1, a2) { console.log("pmode"); },
+    pmode: function(mode, a) {
+      process(function(p) {
+        // a ignored
+        drawing.mode = mode;
+      });
+    },
     poke: function(mem, value) { console.log("poke"); },
     pset: function(x,y,clr) { console.log("pset"); },
     put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
@@ -175,7 +248,18 @@ var trs80 = (function() {
         throw "return without gosub";
       }
     },
-    screen: function(a1, a2) { console.log("screen"); },
+    screen: function(gort, colorset) {
+      process(function(p) {
+        if (gort == 0) {
+          drawing.screen = "text";
+        } else if (gort == 1) {
+          drawing.screen = "graphics";
+        } else {
+          throw ("invalid screen mode: " + gort);
+        }
+        drawing.colorset = colorset;
+      });
+    },
     sound: function(pitch, duration) { console.log("sound"); },
     recall: function(varName) {
       if (last(varName) == "$") {
@@ -238,6 +322,9 @@ var trs80 = (function() {
     }
   };
   var run = function(pr, st) {
+    process(function(p) {
+      p.noStroke();
+    });
     pg = pr;
     next = st;
     setTimeout(step, 100);

@@ -46,8 +46,8 @@ wCommand cmd =
       case mbIndex of
         Nothing -> wBasic "assign" [w (show var), wExpr val]
         Just ind -> wBasic "assignArr" [w (show var), wExpr ind, wExpr val]
-    Circle (x, y) rad mb1 mbElX mbElY mb4 ->
-      wBasic "circle" [wExpr x, wExpr y, wExpr rad, mb1 `orElse` 0 {- todo -}, mbElX `orElse` 0 {- todo -}, mbElY `orElse` 0 {- todo -}, mb4 `orElse` 0 {- todo -}]
+    Circle (x, y) rad clr ratio start end ->
+      wBasic "circle" [wExpr x, wExpr y, wExpr rad, maybe (w "undefined") (w . show) clr, mbElX `orElse` 1, mbElY `orElse` 0, mb4 `orElse` 1]
     Clear e -> wBasic "clear" [wExpr e]
     Color c1 c2 -> wBasic "color" (map wExpr [c1, c2])
     Dim decls -> mapM_ (\(var,dim) -> wBasic "dim" [w (show var), wArray (map (wExpr . LiteralNumber . Left . toInteger) dim)]) decls
