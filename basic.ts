@@ -10,6 +10,7 @@ var memory = {
   stringArrays: { }
 };
 var trs80 = (function() {
+  var keyQueue = [];
   var next = null;
   var quit = false;
   var pg = null;
@@ -173,7 +174,8 @@ var trs80 = (function() {
           c = drawing.foregroundColor;
         }
         p.stroke.apply(p, cocoColor(c));
-        p.fill.apply(p, cocoColor(c)); // do I need both of these?
+        // p.fill.apply(p, cocoColor(c)); // do I need both of these?
+        p.noFill();
         p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
         p.noStroke();
       });
@@ -484,7 +486,13 @@ var trs80 = (function() {
       return e1 > e2;
     },
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
-    inkey: function() { console.log("inkey"); },
+    inkey: function() {
+      if (keyQueue.length == 0) {
+        return "";
+      } else {
+        return String.fromCharCode(keyQueue.pop());
+      }
+    },
     asc: function(c) {
       if (c.length > 0) {
         return c.charCodeAt(0);
@@ -584,7 +592,10 @@ var trs80 = (function() {
     });
     pg = pr;
     next = st;
-    setTimeout(step, 100);
+    document.onkeypress = function(k) {
+      keyQueue.unshift(k.keyCode);
+    };
+    setTimeout(step, 1);
   };
   return {
     run: run,
