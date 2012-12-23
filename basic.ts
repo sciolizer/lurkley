@@ -491,7 +491,7 @@ var trs80 = (function() {
         // console.log("returning \"\"");
         return "";
       } else {
-        var ret = String.fromCharCode(keyQueue.pop());
+        var ret = String.fromCharCode(keyQueue.pop()).toUpperCase();
         console.log("returning: " + ret);
         return ret;
       }
