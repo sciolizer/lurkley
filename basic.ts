@@ -23,7 +23,7 @@ var trs80 = (function() {
     },
     _quit: function() { quit = true; },
     assign: function(varName, value) {
-      console.log("assign: " + varName + " = " + value);
+      // console.log("assign: " + varName + " = " + value);
       if (typeof value == typeof undefined) {
         throw "attempted to assign undefined";
       }
@@ -121,7 +121,15 @@ var trs80 = (function() {
       if (index < 1 || index > targets.length) throw ("out of range onGoto: " + index);
       next = pg["line" + targets[index - 1] + "_0"]; // on goto is 1 based
     },
-    onGosub: function(varName, targets) { console.log("onGosub"); },
+    onGosub: function(varName, targets) {
+      var index = memory.numbers[varName];
+      if (index != 0 || !index) throw ("bad onGosub: " + varName);
+      if (index < 1 || index > targets.length) throw ("out of range onGosub: " + index);
+      onNext = function(n) {
+        stack.push(n);
+        next = pg["line" + index + "_0"];
+      };
+    },
     paint: function(x, y, clr, a1) { console.log("paint"); },
     pcls: function(a1) { console.log("pcls"); },
     play: function(s) { console.log("play"); },
@@ -192,7 +200,7 @@ var trs80 = (function() {
     }
     var n = next;
     next = null;
-    console.log(n);
+    // console.log(n);
     n(bs);
     if (quit) {
       console.log("done");
