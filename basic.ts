@@ -358,7 +358,9 @@ var trs80 = (function() {
         drawing.mode = mode;
       });
     },
-    poke: function(mem, value) { console.log("poke"); },
+    poke: function(mem, value) {
+      console.log("poke");
+    },
     pset: function(x,y,clr) { console.log("pset"); },
     put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
     // putTo: function() { console.log("putTo"); },
@@ -435,7 +437,7 @@ var trs80 = (function() {
     }
     var n = next;
     next = null;
-    // console.log(n);
+    console.log(n);
     n(bs);
     if (quit) {
       console.log("done");
