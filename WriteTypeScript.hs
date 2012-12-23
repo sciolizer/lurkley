@@ -26,7 +26,7 @@ wCompoundCommand prefix cmds nextLn = go [] (zip cmds [0..]) where
     w "_"
     w (show suffix)
     w ": function(basic) { "
-    extra <- wCommand cmd newPrefix nextLn
+    extra <- wCommand cmd newPrefix
     case nextLn of
       Nothing -> w "basic._quit(); }\n"
       Just nln -> do
@@ -35,8 +35,8 @@ wCompoundCommand prefix cmds nextLn = go [] (zip cmds [0..]) where
           then do w "line"
                   w (show nln)
                   w "_0); },\n"
-                  when (not (null (extra ++ additional))) $ do
-                    mapM_ (\(p,cds) -> wCompoundCommand (newPrefix++p) cds nextLn
+                  let more = extra ++ additional
+                  mapM_ (\(p,cds) -> wCompoundCommand p cds nextLn) more
           else do w prefix
                   w "_"
                   w (show (suffix + 1))
@@ -46,7 +46,7 @@ wCompoundCommand prefix cmds nextLn = go [] (zip cmds [0..]) where
 orElse :: Maybe Expr -> Integer -> W ()
 orElse mb x = wExpr (fromMaybe (LiteralNumber (Left x)) mb)
 
-wCommand cmd prefix nextLn =
+wCommand cmd prefix =
   case cmd of
     Assign var mbIndex val -> do
       case mbIndex of
@@ -68,10 +68,10 @@ wCommand cmd prefix nextLn =
       w "if ("
       wBooleanExpr be
       w ") { "
-      let branch suffix clause =
-            case thenC of
+      let branch suffix clause = -- line 180? How in the world?
+            case clause of
               Left i -> do
-                wCommand (Goto i)
+                wBasic "goto" [w (show i)]
                 w " } "
                 return []
               Right moreCmds -> do
@@ -79,9 +79,9 @@ wCommand cmd prefix nextLn =
                 return [(prefix ++ suffix, moreCmds)]
       tExtra <- branch "_then" thenC
       case elseC of
-        Nothing -> return e
+        Nothing -> return tExtra
         Just z -> do
-          eExtra <- branch "_else" elseC
+          eExtra <- branch "_else" z
           return (tExtra ++ eExtra)
     Line Nothing (x2,y2) dm lm -> wBasic "lineTo" [wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))] >> return []
     Line (Just (x1,y1)) (x2,y2) dm lm -> wBasic "line" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))] >> return []
