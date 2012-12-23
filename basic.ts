@@ -436,7 +436,7 @@ var trs80 = (function() {
     }
     var n = next;
     next = null;
-    console.log(n);
+    // console.log(n);
     n(bs);
     if (quit) {
       console.log("done");

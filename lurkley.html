@@ -7,6 +7,9 @@
 var processingQueue = [];
 function sketchProc(processing) {
    // Override draw function, by default it will be called 60 times per second
+   processing.setup = function() {
+     processing.size(256, 192);
+   };
    processing.draw = function() {
      var action;
      while (action = processingQueue.pop()) {
@@ -49,7 +52,7 @@ function sketchProc(processing) {
   <body>
     <button onclick="trs80.run(program, program.line1_0);">Begin</button>
     <button onclick="trs80.quit();">Stop</button>
-    <canvas id="canvas1"></canvas>
+    <canvas id="canvas1" width="256" height="192"></canvas>
   </body>
 <script>
  var canvas = document.getElementById("canvas1");
