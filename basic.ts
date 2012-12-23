@@ -187,6 +187,7 @@ var trs80 = (function() {
       boundCheck("color foreground", foreground, 0, 8);
       boundCheck("color background", background, 0, 8);
       process(function(p) {
+        console.log("color: " + drawing.foregroundColor);
         drawing.foregroundColor = foreground;
         drawing.backgroundColor = background;
       });
@@ -216,6 +217,7 @@ var trs80 = (function() {
     draw: function(s) {
       if (suspended()) return;
       process(function(p) {
+        console.log("drawing: " + s);
         drawStr(cocoColor, drawing, s)(p);
       });
     },
@@ -256,7 +258,7 @@ var trs80 = (function() {
     },
     line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
       if (suspended()) return;
-      console.log("line: " + xorig + ", " + yorig + ", " + x2 + ", " + y2 + ", " + psetOrPreset + ", " + bf);
+      // console.log("line: " + xorig + ", " + yorig + ", " + x2 + ", " + y2 + ", " + psetOrPreset + ", " + bf);
       if (typeof xorig != typeof undefined) {
         boundCheck("line xorig", xorig, 0, MAX_X);
       }
@@ -573,7 +575,7 @@ var trs80 = (function() {
     if (quit) {
       console.log("done");
     } else {
-      setTimeout(step, 10);
+      setTimeout(step, 1);
     }
   };
   var run = function(pr, st) {

@@ -8,7 +8,7 @@ var drawStr = function(cocoColor, drawing, s) {
     var ydirection = 0;
     var flushed = true;
     var flush = function() {
-      console.log("called flush() when flushed = " + flushed);
+      // console.log("called flush() when flushed = " + flushed);
       if (flushed) return;
       if (color) {
         drawing.foregroundColor = distance;
@@ -16,20 +16,20 @@ var drawStr = function(cocoColor, drawing, s) {
         p.stroke.apply(p, cocoColor(drawing.foregroundColor));
         p.fill.apply(p, cocoColor(drawing.foregroundColor));
         if (distance == 0) distance = 1;
-        console.log("else lastX: " + drawing.lastX);
-        console.log("else distance: " + distance);
-        console.log("else xdirection: " + xdirection);
+        // console.log("else lastX: " + drawing.lastX);
+        // console.log("else distance: " + distance);
+        // console.log("else xdirection: " + xdirection);
         var newx = drawing.lastX + distance * xdirection;
         var newy = drawing.lastY + distance * ydirection;
         if (!blank) {
-          console.log("drawing a line!");
-          console.log("drawing.lastX: " + drawing.lastX);
-          console.log("drawing.lastY: " + drawing.lastY);
-          console.log("newx: " + newx);
-          console.log("newy: " + newy);
+          // console.log("drawing a line!");
+          // console.log("drawing.lastX: " + drawing.lastX);
+          // console.log("drawing.lastY: " + drawing.lastY);
+          // console.log("newx: " + newx);
+          // console.log("newy: " + newy);
           p.line(drawing.lastX, drawing.lastY, newx, newy);
         } else {
-          console.log("blank move");
+          // console.log("blank move");
         }
         drawing.lastX = newx;
         drawing.lastY = newy;
@@ -43,7 +43,7 @@ var drawStr = function(cocoColor, drawing, s) {
       flushed = true;
     };
     for (var i = 0; i < s.length; i++) {
-      console.log("s[i] = " + s[i]);
+      // console.log("s[i] = " + s[i]);
       switch (s[i]) {
         case "B":
           flush();
@@ -58,14 +58,14 @@ var drawStr = function(cocoColor, drawing, s) {
           if (coords.length != 2) {
             throw ("invalid coords: " + chunk);
           }
-          console.log("coords: " + coords);
+          // console.log("coords: " + coords);
           if (!blank) {
-            console.log("non blank move");
+            // console.log("non blank move");
             p.stroke.apply(p, cocoColor(drawing.foregroundColor));
             p.fill.apply(p, cocoColor(drawing.foregroundColor));
             p.line(drawing.lastX, drawing.lastY, coords[0], coords[1]);
           } else {
-            console.log("blank move");
+            // console.log("blank move");
           }
           i = back - 1;
           drawing.lastX = parseInt(coords[0]);
@@ -131,9 +131,9 @@ var drawStr = function(cocoColor, drawing, s) {
         case "7":
         case "8":
         case "9":
-          console.log("old distance: " + distance);
+          // console.log("old distance: " + distance);
           distance = 10 * distance + parseInt(s[i])
-          console.log("new distance: " + distance);
+          // console.log("new distance: " + distance);
           break;
         default:
           throw ("draw can't handle: " + s[i] + " in " + s);
@@ -141,4 +141,44 @@ var drawStr = function(cocoColor, drawing, s) {
     }
     flush();
   };
+};
+var debugDrawing = {
+  foregroundColor: 1,
+  backgroundColor: 0,
+  mode: 3, // I think this determines resolution
+  screen: "text", // "text" or "graphics"
+  colorset: 0, // 0 or 1
+  lastX: 0,
+  lastY: 0
+};
+var drawDebug = function(s) {
+  var process = function(f) {
+    processingQueue.unshift(f);
+  };
+  var cocoColor = function(i) {
+    switch (i) {
+      case 0: // black
+        return [0, 0, 0];
+      case 1: // green
+        return [0, 128, 0];
+      case 2: // yellow
+        return [255, 255, 0];
+      case 3: // blue
+        return [0, 0, 255];
+      case 4: // red
+        return [255, 0, 0];
+      case 5: // white
+        return [255, 255, 255];
+      case 6: // cyan
+        return [0, 255, 255];
+      case 7: // magenta
+        return [255, 0, 255];
+      case 8: // orange
+        return [255, 165, 0];
+    }
+    throw ("unrecognized color: " + i);
+  };
+  process(function(p) {
+    drawStr(cocoColor, debugDrawing, s)(p);
+  });
 };
