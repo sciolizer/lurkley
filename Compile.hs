@@ -44,7 +44,7 @@ data Command =
   | Get (Maybe (Expr,Expr)) (Expr,Expr) String {- ^ variable? -} -- only usage is followed by a G; not sure what that means
   | Gosub Int
   | Goto Int
-  | If BooleanExpr (Either Int Command) {- ^ then -} (Maybe (Either Int Command) {- ^ else -})
+  | If BooleanExpr (Either Int [Command]) {- ^ then -} (Maybe (Either Int [Command]) {- ^ else -})
   | Line (Maybe (Expr,Expr)) (Expr,Expr) DrawMode LineMode
   | Next (Maybe String)
   | On String JumpMode [Int]
@@ -177,8 +177,10 @@ parseBasicLine line =
 
 pBasicLine = do
   n <- pNatural
-  cmds <- sepEndBy1 pCommand (pSymbol ":")
+  cmds <- pCompoundCommand
   return $ BasicLine n cmds
+
+pCompoundCommand = sepEndBy1 pCommand (pSymbol ":")
 
 pCommand = pCircle <|> pClear <|> pColor <|> {- pData <|> -} pDim <|> pDraw <|> pFor <|> pGet <|> pGosub <|> pGoto <|> pIf <|> pLine <|> pNext <|> pOn <|> pPaint <|> pPcls <|> pPlay <|> pPmode <|> pPoke <|> pPset <|> pPut <|> pRem <|> pReturn <|> pScreen <|> pSound <|> pAssign <?> "command"
 
@@ -242,7 +244,7 @@ pGoto = do
 pIf = do
   pReserved "IF"
   b <- pBooleanExpr
-  let branch = (Left <$> pNatural) <|> (Right <$> pCommand)
+  let branch = (Left <$> pNatural) <|> (Right <$> pCompoundCommand)
   pReserved "THEN"
   thn <- branch
   els <- optionMaybe (pReserved "ELSE" >> branch)

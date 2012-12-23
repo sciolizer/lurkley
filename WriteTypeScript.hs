@@ -15,80 +15,91 @@ wBasicLines bls = do
   mapM_ (uncurry wBasicLine) (zip bls ([Just i | BasicLine i _ <- tail bls] ++ [Nothing]))
   w "};"
 
-wBasicLine (BasicLine ln cmds) nextLn = go (zip cmds [0..]) where
-  go [] = error "line has no commands"
-  go ((cmd,suffix):cmds) = do
-    w "  line"
-    w (show ln)
+wBasicLine (BasicLine ln cmds) nextLn = wCompoundCommand ("line" ++ show ln) cmds nextLn
+
+wCompoundCommand prefix cmds nextLn = go [] (zip cmds [0..]) where
+  go _ [] = error "line has no commands"
+  go additional ((cmd,suffix):cmds) = do
+    w "  "
+    let newPrefix = prefix ++ "_" ++ show suffix
+    w prefix
     w "_"
     w (show suffix)
     w ": function(basic) { "
-    wCommand cmd
+    extra <- wCommand cmd newPrefix nextLn
     case nextLn of
       Nothing -> w "basic._quit(); }\n"
       Just nln -> do
-        w "basic._next(program.line"
+        w "basic._next(program."
         if null cmds
-          then do w (show nln)
+          then do w "line"
+                  w (show nln)
                   w "_0); },\n"
-          else do w (show ln)
+                  when (not (null (extra ++ additional))) $ do
+                    mapM_ (\(p,cds) -> wCompoundCommand (newPrefix++p) cds nextLn
+          else do w prefix
                   w "_"
                   w (show (suffix + 1))
                   w "); },\n"
-                  go cmds
+                  go (extra ++ additional) cmds
 
 orElse :: Maybe Expr -> Integer -> W ()
 orElse mb x = wExpr (fromMaybe (LiteralNumber (Left x)) mb)
 
-wCommand cmd =
+wCommand cmd prefix nextLn =
   case cmd of
     Assign var mbIndex val -> do
       case mbIndex of
-        Nothing -> wBasic "assign" [w (show var), wExpr val]
-        Just ind -> wBasic "assignArr" [w (show var), wExpr ind, wExpr val]
+        Nothing -> wBasic "assign" [w (show var), wExpr val] >> return []
+        Just ind -> wBasic "assignArr" [w (show var), wExpr ind, wExpr val] >> return []
     Circle (x, y) rad clr ratio start end ->
-      wBasic "circle" [wExpr x, wExpr y, wExpr rad, maybe (w "undefined") wExpr clr, ratio `orElse` 1, start `orElse` 0, end `orElse` 1] where
+      wBasic "circle" [wExpr x, wExpr y, wExpr rad, maybe (w "undefined") wExpr clr, ratio `orElse` 1, start `orElse` 0, end `orElse` 1] >> return []
 
-    Clear e -> wBasic "clear" [wExpr e]
-    Color c1 c2 -> wBasic "color" (map wExpr [c1, c2])
-    Dim decls -> mapM_ (\(var,dim) -> wBasic "dim" [w (show var), wArray (map (wExpr . LiteralNumber . Left . toInteger) dim)]) decls
-    Draw e -> wBasic "draw" [wExpr e]
-    For var start end mbStep -> wBasic "for" [w (show var), wExpr start, wExpr end, mbStep `orElse` 1]
-    Get Nothing (x2,y2) var -> wBasic "getTo" [wExpr x2, wExpr y2, w (show var)]
-    Get (Just (x1, y1)) (x2,y2) var -> wBasic "get" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show var)]
-    Gosub i -> wBasic "gosub" [w (show i)]
-    Goto i -> wBasic "goto" [w (show i)]
+    Clear e -> wBasic "clear" [wExpr e] >> return []
+    Color c1 c2 -> wBasic "color" (map wExpr [c1, c2]) >> return []
+    Dim decls -> mapM_ (\(var,dim) -> wBasic "dim" [w (show var), wArray (map (wExpr . LiteralNumber . Left . toInteger) dim)]) decls >> return []
+    Draw e -> wBasic "draw" [wExpr e] >> return []
+    For var start end mbStep -> wBasic "for" [w (show var), wExpr start, wExpr end, mbStep `orElse` 1] >> return []
+    Get Nothing (x2,y2) var -> wBasic "getTo" [wExpr x2, wExpr y2, w (show var)] >> return []
+    Get (Just (x1, y1)) (x2,y2) var -> wBasic "get" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show var)] >> return []
+    Gosub i -> wBasic "gosub" [w (show i)] >> return []
+    Goto i -> wBasic "goto" [w (show i)] >> return []
     If be thenC elseC -> do
       w "if ("
       wBooleanExpr be
       w ") { "
-      let normalize (Left i) = Goto i
-          normalize (Right r) = r
-      wCommand (normalize thenC)
-      w " } "
+      let branch suffix clause =
+            case thenC of
+              Left i -> do
+                wCommand (Goto i)
+                w " } "
+                return []
+              Right moreCmds -> do
+                w $ "basic._next(program." ++ prefix ++ suffix ++ "); } "
+                return [(prefix ++ suffix, moreCmds)]
+      tExtra <- branch "_then" thenC
       case elseC of
-        Nothing -> return ()
+        Nothing -> return e
         Just z -> do
-          w "else { "
-          wCommand (normalize z)
-          w " } "
-    Line Nothing (x2,y2) dm lm -> wBasic "lineTo" [wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))]
-    Line (Just (x1,y1)) (x2,y2) dm lm -> wBasic "line" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))]
-    Next mbVar -> wBasic "next" [w $ show (fromMaybe "" mbVar)]
-    On var mode lns -> wBasic func [w (show var), wArray (map (w . show) lns)] where
+          eExtra <- branch "_else" elseC
+          return (tExtra ++ eExtra)
+    Line Nothing (x2,y2) dm lm -> wBasic "lineTo" [wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))] >> return []
+    Line (Just (x1,y1)) (x2,y2) dm lm -> wBasic "line" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show (drawMode dm)), w (show (lineMode lm))] >> return []
+    Next mbVar -> wBasic "next" [w $ show (fromMaybe "" mbVar)] >> return []
+    On var mode lns -> wBasic func [w (show var), wArray (map (w . show) lns)] >> return [] where
       func = case mode of { JumpGoto -> "onGoto"; JumpGosub -> "onGosub" }
-    Paint (x,y) e1 e2 -> wBasic "paint" (map wExpr [x, y, e1, e2])
-    Pcls mbClr -> wBasic "pcls" [mbClr `orElse` 0 {- todo -}]
-    Play e -> wBasic "play" [wExpr e]
-    Pmode e1 e2 -> wBasic "pmode" (map wExpr [e1, e2])
-    Poke e1 e2 -> wBasic "poke" (map wExpr [e1, e2])
-    Pset (x,y) clr -> wBasic "pset" (map wExpr [x, y, clr])
-    Put Nothing (x2,y2) var -> wBasic "putTo" [wExpr x2, wExpr y2, w (show var)]
-    Put (Just (x1,y1)) (x2,y2) var -> wBasic "put" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show var)]
-    Rem s -> w "/* " >> w s >> w " */ "
-    Return -> wBasic "return" []
-    Screen e1 e2 -> wBasic "screen" (map wExpr [e1, e2])
-    Sound e1 e2 -> wBasic "sound" (map wExpr [e1, e2])
+    Paint (x,y) e1 e2 -> wBasic "paint" (map wExpr [x, y, e1, e2]) >> return []
+    Pcls mbClr -> wBasic "pcls" [mbClr `orElse` 0 {- todo -}] >> return []
+    Play e -> wBasic "play" [wExpr e] >> return []
+    Pmode e1 e2 -> wBasic "pmode" (map wExpr [e1, e2]) >> return []
+    Poke e1 e2 -> wBasic "poke" (map wExpr [e1, e2]) >> return []
+    Pset (x,y) clr -> wBasic "pset" (map wExpr [x, y, clr]) >> return []
+    Put Nothing (x2,y2) var -> wBasic "putTo" [wExpr x2, wExpr y2, w (show var)] >> return []
+    Put (Just (x1,y1)) (x2,y2) var -> wBasic "put" [wExpr x1, wExpr y1, wExpr x2, wExpr y2, w (show var)] >> return []
+    Rem s -> w "/* " >> w s >> w " */ " >> return []
+    Return -> wBasic "return" [] >> return []
+    Screen e1 e2 -> wBasic "screen" (map wExpr [e1, e2]) >> return []
+    Sound e1 e2 -> wBasic "sound" (map wExpr [e1, e2]) >> return []
 
 drawMode DrawPset = "pset"
 drawMode DrawPreset = "preset"
