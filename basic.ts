@@ -17,6 +17,12 @@ var trs80 = (function() {
   var process = function(f) {
     processingQueue.unshift(f);
   };
+  var findLine = function(varName, targets) {
+    var index = memory.numbers[varName];
+    if (index != 0 && !index) throw ("bad onGoto/onGosub: " + varName);
+    if (index < 1 || index > targets.length) throw ("out of range onGoto/onGosub: " + index);
+    return pg["line" + targets[index - 1] + "_0"]; // is 1 based
+  };
   var psetPreset = function(which) {
     if (which == "pset") {
       return cocoColor(drawing.foregroundColor);
@@ -329,20 +335,13 @@ var trs80 = (function() {
       }
     },
     onGoto: function(varName, targets) {
-      var index = memory.numbers[varName];
-      if (index != 0 && !index) throw ("bad onGoto: " + varName);
-      if (index < 1 || index > targets.length) throw ("out of range onGoto: " + index);
-      next = pg["line" + targets[index - 1] + "_0"]; // on goto is 1 based
+      next = findLine(varName, targets);
     },
     onGosub: function(varName, targets) {
-      var index = memory.numbers[varName];
-      //console.log("index");
-      //console.log(index);
-      if (index != 0 && !index) throw ("bad onGosub: " + varName);
-      if (index < 1 || index > targets.length) throw ("out of range onGosub: " + index);
+      var nn = findLine(varName, targets);
       onNext = function(n) {
         stack.push(n);
-        next = pg["line" + index + "_0"];
+        next = nn;
       };
     },
     paint: function(x, y, clr, a1) { console.log("paint"); },
@@ -454,6 +453,7 @@ var trs80 = (function() {
     setTimeout(step, 100);
   };
   return {
-    run: run
+    run: run,
+    quit: function() { quit = true; }
   };
 })()
