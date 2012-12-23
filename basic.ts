@@ -15,11 +15,11 @@ var trs80 = (function() {
   var forStack = []; // [(String, Int, Int, Int, Function)]
   var stack = [];
   var onNext = null;
-  var last = function(str) { return str.substring(str.length - 1); }
+  var last = function(str) { return str.substring(str.length - 1); };
   var process = function(f) {
     processingQueue.unshift(f);
   };
-  var checkComparison(str, l, r) {
+  var checkComparison = function(str, l, r) {
     if (typeof l == typeof undefined) {
       throw ("left of " + str + " is undefined");
     }
@@ -30,7 +30,7 @@ var trs80 = (function() {
       throw (str + " types are not the same");
     }
   };
-  var checkNumeric(str, l, r) {
+  var checkNumeric = function(str, l, r) {
     if (typeof l != typeof 0) {
       throw ("left of " + str + " not a number: " + l);
     }
@@ -38,7 +38,7 @@ var trs80 = (function() {
       throw ("right of " + str + " not a number: " + r);
     }
   };
-  var boundCheck(str, val, min, max) {
+  var boundCheck = function(str, val, min, max) {
     if (typeof val != typeof 0) {
       throw (str + " not a number")
     }
@@ -446,7 +446,7 @@ var trs80 = (function() {
         console.log("pset");
         drawing.lastX = x;
         drawing.lastY = y;
-      );
+      });
     },
     put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
     // putTo: function() { console.log("putTo"); },
