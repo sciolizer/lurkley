@@ -178,10 +178,10 @@ var trs80 = (function() {
     inkey: function() { console.log("inkey"); },
     asc: function(c) { return c.charCodeAt(0); },
     chr: function(i) { return String.fromCharCode(i); },
-    instr: function(haystack, needle) { console.log("instr"); },
+    instr: function(haystack, needle) { return haystack.indexOf(needle) + 1; },
     int: function(v) { return Math.round(v - 0.5); },
     left: function(str, length) { return str.substring(0, length); },
-    mid: function(str, start, length) { return str.substring(start, start + length); },
+    mid: function(str, start, length) { return str.substring(start + 1, start + 1 + length); },
     rnd: function(i) { console.log("rnd"); },
     str: function(i) { return "" + i; },
     string: function(count, num) {
