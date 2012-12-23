@@ -2,6 +2,12 @@ declare var processingQueue;
 var PI = 3.14159265358;
 var MAX_X = 511; // 255;
 var MAX_Y = 192;
+var memory = {
+  numbers: { },
+  strings: { },
+  numberArrays: { },
+  stringArrays: { }
+};
 var trs80 = (function() {
   var next = null;
   var quit = false;
@@ -9,12 +15,6 @@ var trs80 = (function() {
   var suspencion = [];
   var suspended = function() {
     return suspencion.length > 0;
-  };
-  var memory = {
-    numbers: { },
-    strings: { },
-    numberArrays: { },
-    stringArrays: { }
   };
   var forStack = []; // [(String, Int, Int, Int, Function)]
   var stack = [];
@@ -59,7 +59,12 @@ var trs80 = (function() {
       throw ("bad onGoto/onGosub: " + varName);
     }
     if (index < 1 || index > targets.length) throw ("out of range onGoto/onGosub: " + index);
-    return pg["line" + targets[index - 1] + "_0"]; // is 1 based
+    var key = "line" + targets[index - 1] + "_0"; // is 1 based
+    var ret = pg[key]; // is 1 based
+    if (typeof ret == typeof undefined) {
+      throw ("There is no line: " + key);
+    }
+    return ret;
   };
   var psetPreset = function(which) {
     if (which == "pset") {
@@ -467,6 +472,7 @@ var trs80 = (function() {
       var nn = findLine(varName, targets);
       onNext = function(n) {
         stack.push(n);
+        console.log("next from within onGosub: " + next);
         next = nn;
       };
     },
@@ -593,7 +599,13 @@ var trs80 = (function() {
     },
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
     inkey: function() { console.log("inkey"); },
-    asc: function(c) { return c.charCodeAt(0); },
+    asc: function(c) {
+      if (c.length > 0) {
+        return c.charCodeAt(0);
+      } else {
+        throw "cannot calculate asc of empty string"
+      }
+    },
     chr: function(i) {
       if (typeof i != typeof 0) {
         throw ("chr argument not a number: " + i);
@@ -631,7 +643,7 @@ var trs80 = (function() {
       if (typeof length != typeof 0) {
         throw ("length in mid$ not a number: " + length);
       }
-      return str.substring(start + 1, start + 1 + length);
+      return str.substring(start - 1, start - 1 + length); // freaking 1 based indices
     },
     rnd: function(i) {
       if (typeof i != typeof 0) {
