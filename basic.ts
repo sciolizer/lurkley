@@ -6,6 +6,10 @@ var trs80 = (function() {
   var next = null;
   var quit = false;
   var pg = null;
+  var suspencion = [];
+  var suspended = function() {
+    return suspencion.length > 0;
+  };
   var memory = {
     numbers: { },
     strings: { },
@@ -109,6 +113,7 @@ var trs80 = (function() {
     },
     _quit: function() { quit = true; },
     assign: function(varName, value) {
+      if (suspended()) return;
       // console.log("assign: " + varName + " = " + value);
       if (typeof value == typeof undefined) {
         throw "attempted to assign undefined";
@@ -120,6 +125,7 @@ var trs80 = (function() {
       }
     },
     assignArr: function(arrName, arrIndex, value) {
+      if (suspended()) return;
       if (typeof value == typeof undefined) {
         throw "attempted to assignArr undefined";
       }
@@ -138,6 +144,7 @@ var trs80 = (function() {
       arr[arrIndex] = value;
     },
     circle: function(x, y, rad, clr, ratio, start, end) { // todo: fix defaults
+      if (suspended()) return;
       if (ratio < 0 || ratio > 4) {
         throw ("invalid circle ratio: " + ratio)
       }
@@ -164,8 +171,12 @@ var trs80 = (function() {
         p.noStroke();
       });
     },
-    clear: function(n) { ; /* no-op; os handles memory management */ },
+    clear: function(n) {
+      if (suspended()) return;
+      ; /* no-op; os handles memory management */
+    },
     color: function(foreground, background) {
+      if (suspended()) return;
       boundCheck("color foreground", foreground, 0, 8);
       boundCheck("color background", background, 0, 8);
       process(function(p) {
@@ -174,6 +185,7 @@ var trs80 = (function() {
       });
     },
     dim: function(arrName, sizes) {
+      if (suspended()) return;
       if (arrName == "A") {
         ; // hack: ignore A, which is only used for get and put
       } else if (arrName == "B") {
@@ -195,6 +207,7 @@ var trs80 = (function() {
       }
     },
     draw: function(s) {
+      if (suspended()) return;
       process(function(p) {
         var blank = false;
         var distance = 0;
@@ -319,9 +332,14 @@ var trs80 = (function() {
       });
     },
     for: function(varName, start, end, step) {
+      if (suspended()) {
+        suspencion.push(varName);
+        return;
+      }
       console.log("for: " + varName + ", " + start + ", " + end + ", " + step);
       if ((step > 0 && end < start) || (step < 0 && end > start)) {
         console.log("void for loop");
+        suspencion.push(varName);
         return;
       }
       onNext = function(n) {
@@ -332,16 +350,24 @@ var trs80 = (function() {
       };
       memory.numbers[varName] = start;
     },
-    get: function(x, y, a1, a2, arrName) { console.log("get"); },
+    get: function(x, y, a1, a2, arrName) {
+      if (suspended()) return;
+      console.log("get");
+    },
     // getTo: function() { console.log("getTo"); },
     gosub: function(i) {
+      if (suspended()) return;
       onNext = function(n) {
         stack.push(n);
         next = pg["line" + i + "_0"];
       };
     },
-    goto: function(i) { next = pg["line" + i + "_0"]; },
+    goto: function(i) {
+      if (suspended()) return;
+      next = pg["line" + i + "_0"];
+    },
     line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
+      if (suspended()) return;
       if (typeof xorig != typeof undefined) {
         boundCheck("line xorig", xorig, 0, MAX_X);
       }
@@ -388,9 +414,22 @@ var trs80 = (function() {
       });
     },
     lineTo: function(x2, y2, psetOrPreset, bf) {
+      if (suspended()) return;
       bs.line(undefined, undefined, x2, y2, psetOrPreset, bf);
     },
     next: function(varNameOrEmpty) {
+      if (suspended()) {
+        var topS;
+        do {
+          topS = suspencion.pop();
+          if (typeof topS == typeof undefined) {
+            throw "suspencion popped all the way off";
+          }
+        } while (varNameOrEmpty != "" && varNameOrEmpty != topS);
+        if (suspended()) {
+          return;
+        }
+      }
       // console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
       do {
@@ -422,41 +461,57 @@ var trs80 = (function() {
       }
     },
     onGoto: function(varName, targets) {
+      if (suspended()) return;
       next = findLine(varName, targets);
     },
     onGosub: function(varName, targets) {
+      if (suspended()) return;
       var nn = findLine(varName, targets);
       onNext = function(n) {
         stack.push(n);
         next = nn;
       };
     },
-    paint: function(x, y, clr, a1) { console.log("paint"); },
+    paint: function(x, y, clr, a1) {
+      if (suspended()) return;
+      console.log("paint");
+    },
     pcls: function(color) {
+      if (suspended()) return;
       process(function(p) {
         p.background.apply(p, cocoColor(color));
       });
     },
-    play: function(s) { console.log("play"); },
+    play: function(s) {
+      if (suspended()) return;
+      console.log("play");
+    },
     pmode: function(mode, a) {
+      if (suspended()) return;
       process(function(p) {
         // a ignored
         drawing.mode = mode;
       });
     },
     poke: function(mem, value) {
+      if (suspended()) return;
       console.log("poke");
     },
     pset: function(x,y,clr) {
+      if (suspended()) return;
       process(function(p) {
         console.log("pset");
         drawing.lastX = x;
         drawing.lastY = y;
       });
     },
-    put: function(x1,y1,x2,y2,arrName) { console.log("put"); },
+    put: function(x1,y1,x2,y2,arrName) {
+      if (suspended()) return;
+      console.log("put");
+    },
     // putTo: function() { console.log("putTo"); },
     return: function() {
+      if (suspended()) return;
       var n = stack.pop();
       if (typeof n == typeof undefined) {
         throw "return without gosub";
@@ -465,6 +520,7 @@ var trs80 = (function() {
       }
     },
     screen: function(gort, colorset) {
+      if (suspended()) return;
       process(function(p) {
         if (gort == 0) {
           drawing.screen = "text";
@@ -476,7 +532,10 @@ var trs80 = (function() {
         drawing.colorset = colorset;
       });
     },
-    sound: function(pitch, duration) { console.log("sound"); },
+    sound: function(pitch, duration) {
+      if (suspended()) return;
+      console.log("sound");
+    },
     recall: function(varName) {
       if (last(varName) == "$") {
         var ret = memory.strings[varName];
