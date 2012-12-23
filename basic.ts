@@ -189,7 +189,7 @@ var trs80 = (function() {
       boundCheck("color foreground", foreground, 0, 8);
       boundCheck("color background", background, 0, 8);
       process(function(p) {
-        console.log("color: " + drawing.foregroundColor);
+        // console.log("color: " + drawing.foregroundColor);
         drawing.foregroundColor = foreground;
         drawing.backgroundColor = background;
       });
@@ -596,6 +596,8 @@ var trs80 = (function() {
     pg = pr;
     next = st;
     document.onkeypress = function(k) {
+      console.log("queueing key: " + k.keyCode);
+      console.log(k);
       keyQueue.unshift(k.keyCode);
     };
     setTimeout(step, 1);
