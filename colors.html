@@ -1,0 +1,27 @@
+<html>
+<head>
+<script>
+function getColorValue(color) {
+    var t = document.createElement('div');
+    t.style.display = 'none';
+    t.style.color = color;
+    document.body.appendChild(t);
+
+    var style = window.getComputedStyle(t, null);
+    var colorValue = style.getPropertyCSSValue('color').getRGBColorValue();
+    document.body.removeChild(t);
+
+    var hex = function(x) {
+        return ('0' + parseInt(x, 10).toString(16)).slice(-2);
+    }
+
+    var hexString = '#';
+        hexString += hex(colorValue.red.cssText) + hex(colorValue.green.cssText) + hex(colorValue.blue.cssText);
+
+    return hexString;
+}
+</script>
+</head>
+<body>
+</body>
+</html>
