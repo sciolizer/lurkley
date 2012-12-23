@@ -1,6 +1,6 @@
 declare var processingQueue;
 var PI = 3.14159265358;
-var MAX_X = 255;
+var MAX_X = 511; // 255;
 var MAX_Y = 192;
 var trs80 = (function() {
   var next = null;

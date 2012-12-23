@@ -75,7 +75,7 @@ wCommand cmd prefix =
                 w " } "
                 return []
               Right moreCmds -> do
-                w $ "basic._next(program." ++ prefix ++ suffix ++ "); } "
+                w $ "basic._next(program." ++ prefix ++ suffix ++ "_0); } "
                 return [(prefix ++ suffix, moreCmds)]
       tExtra <- branch "_then" thenC
       case elseC of
