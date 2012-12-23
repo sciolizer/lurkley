@@ -43,10 +43,10 @@ var trs80 = (function() {
       throw (str + " not a number")
     }
     if (val < min) {
-      throw (str + " less than min of " + min);
+      throw (str + " less than min of " + min + ": " + val);
     }
     if (val > max) {
-      throw (str + " less than max of " + max);
+      throw (str + " more than max of " + max + ": " + val);
     }
   };
   var findLine = function(varName, targets) {
@@ -473,17 +473,21 @@ var trs80 = (function() {
     sound: function(pitch, duration) { console.log("sound"); },
     recall: function(varName) {
       if (last(varName) == "$") {
-        if (typeof memory.strings[varName] == typeof undefined) {
+        var ret = memory.strings[varName];
+        if (typeof ret != typeof "") {
           throw ("tried to recall: " + varName);
           //memory.strings[varName] = "";
         }
-        return memory.strings[varName];
+        console.log(varName + ": " + ret);
+        return ret;
       } else {
-        if (typeof memory.numbers[varName] == typeof undefined) {
+        var ret = memory.numbers[varName];
+        if (typeof ret != typeof 0) {
           throw ("tried to recall: " + varName);
           // memory.numbers[varName] = "";
         }
-        return memory.numbers[varName];
+        console.log(varName + ": " + ret);
+        return ret;
       }
     },
     recallArr: function(arrName, ind) {
