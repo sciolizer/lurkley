@@ -92,11 +92,12 @@ data Expr =
   deriving (Eq, Ord, Read, Show)
 
 data BuiltIn =
-  ChrS | Instr | Int | LeftS | Len | MidS | Rnd | StrS | StringS | Val
+  Asc | ChrS | Instr | Int | LeftS | Len | MidS | Rnd | StrS | StringS | Val
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 arity bi =
   case bi of
+    Asc -> 1
     ChrS -> 1
     Instr -> 2
     Int -> 1

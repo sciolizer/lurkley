@@ -23,17 +23,24 @@ var trs80 = (function() {
     },
     _quit: function() { quit = true; },
     assign: function(varName, value) {
+      console.log("assign: " + varName + " = " + value);
+      if (typeof value == typeof undefined) {
+        throw "attempted to assign undefined";
+      }
       if (last(varName) == "$") {
-        memory.numbers[varName] = value;
-      } else {
         memory.strings[varName] = value;
+      } else {
+        memory.numbers[varName] = value;
       }
     },
     assignArr: function(arrName, arrIndex, value) {
+      if (typeof value == typeof undefined) {
+        throw "attempted to assignArr undefined";
+      }
       if (last(arrName) == "$") {
-        memory.numberArrays[arrName][arrIndex] = value;
-      } else {
         memory.stringArrays[arrName][arrIndex] = value;
+      } else {
+        memory.numberArrays[arrName][arrIndex] = value;
       }
     },
     circle: function(x, y, rad, a1, a2, a3, a4) { console.log("circle"); },
@@ -59,10 +66,11 @@ var trs80 = (function() {
     },
     draw: function(s) { console.log("draw"); },
     for: function(varName, start, end, step) {
+      console.log("for: " + varName + ", " + start + ", " + end + ", " + step);
       if ((step > 0 && end < start) || (step < 0 && end > start)) { return; }
       onNext = function(n) {
         forStack.push([varName, start, end, step, n]);
-        console.log("starting for loop");
+        console.log("starting for loop: " + varName);
         console.log(forStack.slice(0));
         next = n;
       };
@@ -80,17 +88,17 @@ var trs80 = (function() {
     line: function(x1, y1, x2, y2, psetOrPreset, bf) { console.log("line"); },
     lineTo: function(x2, y2, psetOrPreset, bf) { console.log("lineTo"); },
     next: function(varNameOrEmpty) {
-      console.log("attempting next with variable: " + varNameOrEmpty);
+      // console.log("attempting next with variable: " + varNameOrEmpty);
       var recent;
       do {
-        console.log("popping off of for stack");
-        console.log(forStack.slice(0));
+        // console.log("popping off of for stack");
+        // console.log(forStack.slice(0));
         recent = forStack.pop();
         if (!recent) {
-          throw "popped off for stack";
+          throw ("popped off for stack: " + varNameOrEmpty);
         }
       } while (varNameOrEmpty != "" && varNameOrEmpty != recent[0]);
-      console.log("found a match for the variable name");
+      // console.log("found a match for the variable name");
       var varName = recent[0];
       var current = recent[1];
       var end = recent[2];
@@ -101,13 +109,18 @@ var trs80 = (function() {
       if ((step > 0 && newval > end) || (step < 0 && newval < end)) {
         ; // loop is done
       } else {
-        console.log("pushing back onto for stack");
+        // console.log("pushing back onto for stack");
         forStack.push([varName, newval, end, step, loopback]);
-        console.log(forStack.slice(0));
+        // console.log(forStack.slice(0));
         next = loopback;
       }
     },
-    onGoto: function(varName, targets) { console.log("onGoto"); },
+    onGoto: function(varName, targets) {
+      var index = memory.numbers[varName];
+      if (index != 0 || !index) throw ("bad onGoto: " + varName);
+      if (index < 1 || index > targets.length) throw ("out of range onGoto: " + index);
+      next = pg["line" + targets[index - 1] + "_0"]; // on goto is 1 based
+    },
     onGosub: function(varName, targets) { console.log("onGosub"); },
     paint: function(x, y, clr, a1) { console.log("paint"); },
     pcls: function(a1) { console.log("pcls"); },
@@ -155,6 +168,7 @@ var trs80 = (function() {
     isGreaterThan: function(e1, e2) { return e1 > e2; },
     // isGreaterThanOrEqual: function() { console.log("isGreaterThanOrEqual"); },
     inkey: function() { console.log("inkey"); },
+    asc: function(c) { return c.charCodeAt(0); },
     chr: function(i) { return String.fromCharCode(i); },
     instr: function(haystack, needle) { console.log("instr"); },
     int: function(v) { return Math.round(v - 0.5); },
@@ -178,11 +192,12 @@ var trs80 = (function() {
     }
     var n = next;
     next = null;
+    console.log(n);
     n(bs);
     if (quit) {
       console.log("done");
     } else {
-      setTimeout(step, 100);
+      setTimeout(step, 10);
     }
   };
   var run = function(pr, st) {
