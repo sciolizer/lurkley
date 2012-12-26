@@ -1,8 +1,4 @@
-declare var processingQueue;
-declare var drawStr;
-var PI = 3.14159265358;
-var MAX_X = 511; // 255;
-var MAX_Y = 384; // 192;
+declare var graphics;
 var memory = {
   numbers: { },
   strings: { },
@@ -22,9 +18,6 @@ var trs80 = (function() {
   var stack = [];
   var onNext = null;
   var last = function(str) { return str.substring(str.length - 1); };
-  var process = function(f) {
-    processingQueue.unshift(f);
-  };
   var checkComparison = function(str, l, r) {
     if (typeof l == typeof undefined) {
       throw ("left of " + str + " is undefined");
@@ -42,17 +35,6 @@ var trs80 = (function() {
     }
     if (typeof r != typeof 0) {
       throw ("right of " + str + " not a number: " + r);
-    }
-  };
-  var boundCheck = function(str, val, min, max) {
-    if (typeof val != typeof 0) {
-      throw (str + " not a number")
-    }
-    if (val < min) {
-      throw (str + " less than min of " + min + ": " + val);
-    }
-    if (val > max) {
-      throw (str + " more than max of " + max + ": " + val);
     }
   };
   var findLine = function(varName, targets) {
@@ -76,53 +58,6 @@ var trs80 = (function() {
     colorset: 0, // 0 or 1
     lastX: 0,
     lastY: 0
-  };
-  var cocoColor = function(i) {
-    switch (i) {
-      case 0: // black
-        return [0, 0, 0];
-      case 1: // green
-        return [0, 128, 0];
-      case 2: // yellow
-        return [255, 255, 0];
-      case 3: // blue
-        return [0, 0, 255];
-      case 4: // red
-        return [255, 0, 0];
-      case 5: // white
-        return [255, 255, 255];
-      case 6: // cyan
-        return [0, 255, 255];
-      case 7: // magenta
-        return [255, 0, 255];
-      case 8: // orange
-        return [255, 165, 0];
-    }
-    throw ("unrecognized color: " + i);
-  };
-  var setColor = function(p, clr) {
-    var c;
-    if (typeof clr == typeof undefined) {
-      c = drawing.foregroundColor;
-    } else {
-      drawing.foregroundColor = clr;
-      c = clr;
-    }
-    p.stroke.apply(p, cocoColor(c));
-    p.noFill();
-  };
-  var psetPreset = function(which, p, colorCallback) {
-    if (which == "pset") {
-      setColor(p, drawing.foregroundColor);
-      colorCallback(cocoColor(drawing.foregroundColor));
-    } else if (which == "preset") {
-      var f = drawing.foregroundColor;
-      setColor(p, drawing.backgroundColor);
-      colorCallback(cocoColor(drawing.backgroundColor));
-      setColor(p, f);
-    } else {
-      throw ("unrecognized pset/preset: " + which);
-    }
   };
   var bs = {
     _next: function(n) {
@@ -165,45 +100,9 @@ var trs80 = (function() {
       }
       arr[arrIndex] = value;
     },
-    circle: function(x, y, rad, clr, ratio, start, end) { // todo: fix defaults
-      if (suspended()) return;
-      // console.log("circle: " + x + ", " + rad + 
-      if (ratio < 0 || ratio > 4) {
-        throw ("invalid circle ratio: " + ratio)
-      }
-      if (start < 0 || start > 1) {
-        throw ("invalid circle start: " + start)
-      }
-      if (end < 0 || end > 1) {
-        throw ("invalid circle end: " + end)
-      }
-      if (x < 0 || x > MAX_X) {
-        throw ("invalid circle x: " + x)
-      }
-      if (y < 0 || y > MAX_Y) {
-        throw ("invalid circle y: " + y)
-      }
-      process(function(p) {
-        var c = clr;
-        if (typeof clr == typeof undefined) {
-          c = drawing.foregroundColor;
-        }
-        setColor(p, clr);
-        p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
-      });
-    },
     clear: function(n) {
       if (suspended()) return;
       ; /* no-op; os handles memory management */
-    },
-    color: function(foreground, background) {
-      if (suspended()) return;
-      boundCheck("color foreground", foreground, 0, 8);
-      boundCheck("color background", background, 0, 8);
-      process(function(p) {
-        setColor(p, foreground);
-        drawing.backgroundColor = background;
-      });
     },
     dim: function(arrName, sizes) {
       if (suspended()) return;
@@ -214,7 +113,7 @@ var trs80 = (function() {
           throw "dim only implemented for one-dimensional arrays";
         }
         var size = sizes[0];
-        boundCheck("dim size", size, 0, undefined);
+        basic_common.boundCheck("dim size", size, 0, undefined);
         if (last(arrName) == "$") {
           throw "dim not implemented for string arrays";
         } else {
@@ -226,14 +125,6 @@ var trs80 = (function() {
       } else {
         throw "unequipped to handle any array except B"
       }
-    },
-    draw: function(s) {
-      if (suspended()) return;
-      process(function(p) {
-        console.log("drawing: " + s);
-        setColor(p, undefined);
-        drawStr(cocoColor, drawing, s)(p);
-      });
     },
     for: function(varName, start, end, step) {
       if (suspended()) {
@@ -254,11 +145,6 @@ var trs80 = (function() {
       };
       memory.numbers[varName] = start;
     },
-    get: function(x, y, a1, a2, arrName) {
-      if (suspended()) return;
-      console.log("get");
-    },
-    // getTo: function() { console.log("getTo"); },
     gosub: function(i) {
       if (suspended()) return;
       onNext = function(n) {
@@ -269,50 +155,6 @@ var trs80 = (function() {
     goto: function(i) {
       if (suspended()) return;
       next = pg["line" + i + "_0"];
-    },
-    line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
-      if (suspended()) return;
-      // console.log("line: " + xorig + ", " + yorig + ", " + x2 + ", " + y2 + ", " + psetOrPreset + ", " + bf);
-      if (typeof xorig != typeof undefined) {
-        boundCheck("line xorig", xorig, 0, MAX_X);
-      }
-      if (typeof yorig != typeof undefined) {
-        boundCheck("line yorig", yorig, 0, MAX_Y);
-      }
-      boundCheck("line x2", x2, 0, MAX_X);
-      boundCheck("line y2", y2, 0, MAX_Y);
-      process(function(p) {
-        psetPreset(psetOrPreset, p, function(color) {
-          var x1;
-          var y1;
-          if (typeof xorig == typeof undefined) {
-            x1 = drawing.lastX;
-          } else {
-            x1 = xorig;
-          }
-          if (typeof yorig == typeof undefined) {
-            y1 = drawing.lastY;
-          } else {
-            y1 = yorig;
-          }
-          if (bf == "") {
-            p.line(x1, y1, x2, y2);
-          } else if (bf == "b") {
-            p.rect(x1, y1, x2 - x1, y2 - x1)
-          } else if (bf == "bf") {
-            p.fill.apply(p, color);
-            p.rect(x1, y1, x2 - x1, y2 - x1)
-          } else {
-            throw ("line not implemented for bf: " + bf);
-          }
-          drawing.lastX = x2;
-          drawing.lastY = y2;
-        });
-      });
-    },
-    lineTo: function(x2, y2, psetOrPreset, bf) {
-      if (suspended()) return;
-      bs.line(undefined, undefined, x2, y2, psetOrPreset, bf);
     },
     next: function(varNameOrEmpty) {
       if (suspended()) {
@@ -368,47 +210,14 @@ var trs80 = (function() {
         next = nn;
       };
     },
-    paint: function(x, y, clr, a1) {
-    // Ideas at http://stackoverflow.com/questions/2106995/how-can-i-perform-flood-fill-with-html-canvas
-      if (suspended()) return;
-      console.log("paint");
-    },
-    pcls: function(color) {
-      if (suspended()) return;
-      process(function(p) {
-        p.background.apply(p, cocoColor(color));
-      });
-    },
     play: function(s) {
       if (suspended()) return;
       console.log("play");
-    },
-    pmode: function(mode, a) {
-      if (suspended()) return;
-      process(function(p) {
-        // a ignored
-        drawing.mode = mode;
-      });
     },
     poke: function(mem, value) {
       if (suspended()) return;
       console.log("poke");
     },
-    pset: function(x,y,clr) {
-      if (suspended()) return;
-      process(function(p) {
-        // console.log("pset");
-        setColor(p, clr);
-        p.point(x,y);
-        drawing.lastX = x;
-        drawing.lastY = y;
-      });
-    },
-    put: function(x1,y1,x2,y2,arrName) {
-      if (suspended()) return;
-      console.log("put");
-    },
-    // putTo: function() { console.log("putTo"); },
     return: function() {
       if (suspended()) return;
       var n = stack.pop();
@@ -417,19 +226,6 @@ var trs80 = (function() {
       } else {
         next = n;
       }
-    },
-    screen: function(gort, colorset) {
-      if (suspended()) return;
-      process(function(p) {
-        if (gort == 0) {
-          drawing.screen = "text";
-        } else if (gort == 1 || gort == 2 || gort == 3) { // todo
-          drawing.screen = "graphics";
-        } else {
-          throw ("invalid screen mode: " + gort);
-        }
-        drawing.colorset = colorset;
-      });
     },
     sound: function(pitch, duration) {
       if (suspended()) return;
@@ -581,6 +377,12 @@ var trs80 = (function() {
       return parseInt(str);
     }
   };
+  for (var method in graphics) {
+    bs.method = function() {
+      if (suspended()) return;
+      graphics.method.apply(graphics, arguments);
+    };
+  }
   var step = function() {
     if (next == null) {
       alert("error: next unspecified and quit not invoked");

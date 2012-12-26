@@ -1,5 +1,4 @@
-declare var processingQueue;
-var drawStr = function(cocoColor, drawing, s) {
+var drawStr = function(drawing, s) {
   return function(p) {
     var blank = false;
     var distance = 0;
@@ -13,8 +12,8 @@ var drawStr = function(cocoColor, drawing, s) {
       if (color) {
         drawing.foregroundColor = distance;
       } else {
-        p.stroke.apply(p, cocoColor(drawing.foregroundColor));
-        p.fill.apply(p, cocoColor(drawing.foregroundColor));
+        p.stroke.apply(p, basic_common.cocoColor(drawing.foregroundColor));
+        p.fill.apply(p, basic_common.cocoColor(drawing.foregroundColor));
         if (distance == 0) distance = 1;
         // console.log("else lastX: " + drawing.lastX);
         // console.log("else distance: " + distance);
@@ -61,8 +60,8 @@ var drawStr = function(cocoColor, drawing, s) {
           // console.log("coords: " + coords);
           if (!blank) {
             // console.log("non blank move");
-            p.stroke.apply(p, cocoColor(drawing.foregroundColor));
-            p.fill.apply(p, cocoColor(drawing.foregroundColor));
+            p.stroke.apply(p, basic_common.cocoColor(drawing.foregroundColor));
+            p.fill.apply(p, basic_common.cocoColor(drawing.foregroundColor));
             p.line(drawing.lastX, drawing.lastY, coords[0], coords[1]);
           } else {
             // console.log("blank move");
@@ -152,33 +151,7 @@ var debugDrawing = {
   lastY: 0
 };
 var drawDebug = function(s) {
-  var process = function(f) {
-    processingQueue.unshift(f);
-  };
-  var cocoColor = function(i) {
-    switch (i) {
-      case 0: // black
-        return [0, 0, 0];
-      case 1: // green
-        return [0, 128, 0];
-      case 2: // yellow
-        return [255, 255, 0];
-      case 3: // blue
-        return [0, 0, 255];
-      case 4: // red
-        return [255, 0, 0];
-      case 5: // white
-        return [255, 255, 255];
-      case 6: // cyan
-        return [0, 255, 255];
-      case 7: // magenta
-        return [255, 0, 255];
-      case 8: // orange
-        return [255, 165, 0];
-    }
-    throw ("unrecognized color: " + i);
-  };
-  process(function(p) {
-    drawStr(cocoColor, debugDrawing, s)(p);
+  basic_common.process(function(p) {
+    drawStr(debugDrawing, s)(p);
   });
 };
