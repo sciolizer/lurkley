@@ -1,3 +1,4 @@
+declare var basic_common;
 var drawStr = function(drawing, s) {
   return function(p) {
     var blank = false;

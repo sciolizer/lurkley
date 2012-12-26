@@ -1,4 +1,5 @@
 declare var graphics;
+declare var basic_common;
 var memory = {
   numbers: { },
   strings: { },
@@ -378,7 +379,7 @@ var trs80 = (function() {
     }
   };
   for (var method in graphics) {
-    bs.method = function() {
+    bs[method] = function() {
       if (suspended()) return;
       graphics.method.apply(graphics, arguments);
     };
@@ -399,7 +400,7 @@ var trs80 = (function() {
     }
   };
   var run = function(pr, st) {
-    process(function(p) {
+    basic_common.process(function(p) {
       p.noStroke();
     });
     pg = pr;

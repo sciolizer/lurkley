@@ -1,4 +1,5 @@
 declare var drawStr;
+declare var basic_common;
 var PI = 3.14159265358;
 var MAX_X = 511; // 255;
 var MAX_Y = 384; // 192;
@@ -36,7 +37,7 @@ var graphics = (function() {
       throw ("unrecognized pset/preset: " + which);
     }
   };
-  return {
+  var ret = {
     circle: function(x, y, rad, clr, ratio, start, end) { // todo: fix defaults
       // console.log("circle: " + x + ", " + rad + 
       if (ratio < 0 || ratio > 4) {
@@ -64,8 +65,8 @@ var graphics = (function() {
       });
     },
     color: function(foreground, background) {
-      basic_graphics.boundCheck("color foreground", foreground, 0, 8);
-      basic_graphics.boundCheck("color background", background, 0, 8);
+      basic_common.boundCheck("color foreground", foreground, 0, 8);
+      basic_common.boundCheck("color background", background, 0, 8);
       basic_common.process(function(p) {
         setColor(p, foreground);
         drawing.backgroundColor = background;
@@ -84,13 +85,13 @@ var graphics = (function() {
     line: function(xorig, yorig, x2, y2, psetOrPreset, bf) {
       // console.log("line: " + xorig + ", " + yorig + ", " + x2 + ", " + y2 + ", " + psetOrPreset + ", " + bf);
       if (typeof xorig != typeof undefined) {
-        basic_graphics.boundCheck("line xorig", xorig, 0, MAX_X);
+        basic_common.boundCheck("line xorig", xorig, 0, MAX_X);
       }
       if (typeof yorig != typeof undefined) {
-        basic_graphics.boundCheck("line yorig", yorig, 0, MAX_Y);
+        basic_common.boundCheck("line yorig", yorig, 0, MAX_Y);
       }
-      basic_graphics.boundCheck("line x2", x2, 0, MAX_X);
-      basic_graphics.boundCheck("line y2", y2, 0, MAX_Y);
+      basic_common.boundCheck("line x2", x2, 0, MAX_X);
+      basic_common.boundCheck("line y2", y2, 0, MAX_Y);
       basic_common.process(function(p) {
         psetPreset(psetOrPreset, p, function(color) {
           var x1;
@@ -121,7 +122,7 @@ var graphics = (function() {
       });
     },
     lineTo: function(x2, y2, psetOrPreset, bf) {
-      bs.line(undefined, undefined, x2, y2, psetOrPreset, bf);
+      ret.line(undefined, undefined, x2, y2, psetOrPreset, bf);
     },
     paint: function(x, y, clr, a1) {
     // Ideas at http://stackoverflow.com/questions/2106995/how-can-i-perform-flood-fill-with-html-canvas
@@ -163,4 +164,5 @@ var graphics = (function() {
       });
     }
   };
+  return ret;
 })()
