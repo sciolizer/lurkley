@@ -379,10 +379,10 @@ var trs80 = (function() {
     }
   };
   for (var method in graphics) {
-    bs[method] = function() {
+    bs[method] = (function(m) { return function() {
       if (suspended()) return;
-      graphics.method.apply(graphics, arguments);
-    };
+      return graphics[m].apply(graphics, arguments);
+    }})(method);
   }
   var step = function() {
     if (next == null) {
