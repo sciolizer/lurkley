@@ -19,6 +19,11 @@ var drawStr = function(drawing, s) {
         // console.log("else lastX: " + drawing.lastX);
         // console.log("else distance: " + distance);
         // console.log("else xdirection: " + xdirection);
+        // if (xdirection != 0 && ydirection != 0) {
+          // console.log("distance: " + distance);
+          // console.log("xdirection: " + xdirection);
+          // console.log("ydirection: " + ydirection);
+        // }
         var newx = drawing.lastX + distance * xdirection;
         var newy = drawing.lastY + distance * ydirection;
         if (!blank) {
@@ -108,7 +113,7 @@ var drawStr = function(drawing, s) {
           break;
         case "H":
           flush(); flushed = false;
-          ydirection = -1; xdirection -1;
+          ydirection = -1; xdirection = -1;
           break;
         case "S":
           flush(); flushed = false;
