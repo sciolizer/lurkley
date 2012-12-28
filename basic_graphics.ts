@@ -190,8 +190,8 @@ var graphics = (function() {
         if (i > 0) s = s + ", ";
         s = s + arguments[i];
       }
-      insertItem(s);
-      replay.history.push({ method: k, args: arguments });
+      // insertItem(s);
+      // replay.history.push({ method: k, args: arguments });
       return ret[k].apply(ret, arguments);
     };})(key);
   }
