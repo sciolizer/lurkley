@@ -3,6 +3,9 @@ declare var basic_common;
 var PI = 3.14159265358;
 var MAX_X = 511; // 255;
 var MAX_Y = 384; // 192;
+var replay = {
+  history: []
+};
 var graphics = (function() {
   var drawing = {
     foregroundColor: 1,
@@ -164,5 +167,12 @@ var graphics = (function() {
       });
     }
   };
-  return ret;
+  var loggingDelegator = {};
+  for (var key in ret) {
+    loggingDelegator[key] = (function(k) { return function() {
+      replay.history.push({ method: k, args: arguments });
+      return ret[k].apply(ret, arguments);
+    };})(key);
+  }
+  return loggingDelegator;
 })()

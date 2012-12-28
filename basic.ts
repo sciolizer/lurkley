@@ -382,7 +382,7 @@ var trs80 = (function() {
     bs[method] = (function(m) { return function() {
       if (suspended()) return;
       return graphics[m].apply(graphics, arguments);
-    }})(method);
+    };})(method);
   }
   var step = function() {
     if (next == null) {
