@@ -168,11 +168,32 @@ var graphics = (function() {
     }
   };
   var loggingDelegator = {};
+  var insertItem = function(newListItem) {
+    var ind = replay.history.length;
+    var ul = document.getElementById("replay");
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.innerHTML = newListItem;
+    a.onclick = function() {
+      for (var i = 0; i <= ind; i++) {
+        var w = replay.history[i];
+        ret[w.method].apply(ret, w.args);
+      }
+    };
+    li.appendChild(a);
+    ul.appendChild(li);
+  };
   for (var key in ret) {
     loggingDelegator[key] = (function(k) { return function() {
+      var s = k + ": ";
+      for (var i = 0; i < arguments.length; i++) {
+        if (i > 0) s = s + ", ";
+        s = s + arguments[i];
+      }
+      insertItem(s);
       replay.history.push({ method: k, args: arguments });
       return ret[k].apply(ret, arguments);
     };})(key);
   }
   return loggingDelegator;
-})()
+})();

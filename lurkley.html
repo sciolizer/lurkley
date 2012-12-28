@@ -56,6 +56,8 @@ function sketchProc(processing) {
     <button onclick="trs80.run(program, program.line1_0);">Begin</button>
     <button onclick="trs80.quit();">Stop</button>
     <canvas id="canvas1" width="256" height="192"></canvas>
+    <ul id="replay" style="border:2px solid #ccc; width:300px; height: 200px; overflow-y: scroll;">
+    </ul>
   </body>
 <script>
  var canvas = document.getElementById("canvas1");
