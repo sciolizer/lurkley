@@ -112,10 +112,11 @@ var graphics = (function() {
           if (bf == "") {
             p.line(x1, y1, x2, y2);
           } else if (bf == "b") {
-            p.rect(x1, y1, x2 - x1, y2 - x1)
+            p.rect(x1, y1, x2 - x1, y2 - y1)
           } else if (bf == "bf") {
+            console.log("bf: " + x1 + ", " + y1 + ", " + (x2 - x1) + ", " + (y2 - y1);
             p.fill.apply(p, color);
-            p.rect(x1, y1, x2 - x1, y2 - x1)
+            p.rect(x1, y1, x2 - x1, y2 - y1)
           } else {
             throw ("line not implemented for bf: " + bf);
           }
@@ -134,6 +135,11 @@ var graphics = (function() {
     pcls: function(color) {
       basic_common.process(function(p) {
         p.background.apply(p, basic_common.cocoColor(color));
+      });
+    },
+    pclsBackground: function() {
+      basic_common.process(function(p) {
+        p.background.apply(p, basic_common.cocoColor(drawing.backgroundColor));
       });
     },
     pmode: function(mode, a) {

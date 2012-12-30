@@ -90,7 +90,10 @@ wCommand cmd prefix =
     On var mode lns -> wBasic func [w (show var), wArray (map (w . show) lns)] >> return [] where
       func = case mode of { JumpGoto -> "onGoto"; JumpGosub -> "onGosub" }
     Paint (x,y) e1 e2 -> wBasic "paint" (map wExpr [x, y, e1, e2]) >> return []
-    Pcls mbClr -> wBasic "pcls" [mbClr `orElse` 0 {- todo -}] >> return []
+    Pcls mbClr ->
+      case mbClr of
+        Just c -> wBasic "pcls" [wExpr c] >> return []
+        Nothing -> wBasic "pclsBackground" [] >> return []
     Play e -> wBasic "play" [wExpr e] >> return []
     Pmode e1 e2 -> wBasic "pmode" (map wExpr [e1, e2]) >> return []
     Poke e1 e2 -> wBasic "poke" (map wExpr [e1, e2]) >> return []
