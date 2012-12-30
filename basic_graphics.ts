@@ -21,7 +21,7 @@ var graphics = (function() {
     if (typeof clr == typeof undefined) {
       c = drawing.foregroundColor;
     } else {
-      drawing.foregroundColor = clr;
+      // drawing.foregroundColor = clr;
       c = clr;
     }
     p.stroke.apply(p, basic_common.cocoColor(c));
@@ -72,6 +72,7 @@ var graphics = (function() {
       basic_common.boundCheck("color background", background, 0, 8);
       basic_common.process(function(p) {
         setColor(p, foreground);
+        drawing.foregroundColor = foreground;
         drawing.backgroundColor = background;
       });
     },
@@ -114,7 +115,7 @@ var graphics = (function() {
           } else if (bf == "b") {
             p.rect(x1, y1, x2 - x1, y2 - y1)
           } else if (bf == "bf") {
-            console.log("bf: " + x1 + ", " + y1 + ", " + (x2 - x1) + ", " + (y2 - y1);
+            console.log("bf: " + x1 + ", " + y1 + ", " + (x2 - x1) + ", " + (y2 - y1) + ", psetOrPreset: " + psetOrPreset);
             p.fill.apply(p, color);
             p.rect(x1, y1, x2 - x1, y2 - y1)
           } else {
@@ -134,11 +135,13 @@ var graphics = (function() {
     },
     pcls: function(color) {
       basic_common.process(function(p) {
+        console.log("pcls foreground: " + color);
         p.background.apply(p, basic_common.cocoColor(color));
       });
     },
     pclsBackground: function() {
       basic_common.process(function(p) {
+        console.log("pcls background: " + drawing.backgroundColor);
         p.background.apply(p, basic_common.cocoColor(drawing.backgroundColor));
       });
     },

@@ -12,7 +12,9 @@ var basic_common = (function() {
         throw (str + " more than max of " + max + ": " + val);
       }
     },
-    cocoColor: function(i) {
+    cocoColor: function(ii) {
+      // console.log("cocoColor: " + i);
+      var i = ii + 4; // todo: use colorset on drawing to figure out which colors to return
       switch (i) {
         case 0: // black
           return [0, 0, 0];
