@@ -6,16 +6,16 @@ var MAX_Y = 384; // 192;
 var replay = {
   history: []
 };
+var drawing = {
+  foregroundColor: 1,
+  backgroundColor: 0,
+  mode: 3, // I think this determines resolution
+  screen: "text", // "text" or "graphics"
+  colorset: 0, // 0 or 1
+  lastX: 0,
+  lastY: 0
+};
 var graphics = (function() {
-  var drawing = {
-    foregroundColor: 1,
-    backgroundColor: 0,
-    mode: 3, // I think this determines resolution
-    screen: "text", // "text" or "graphics"
-    colorset: 0, // 0 or 1
-    lastX: 0,
-    lastY: 0
-  };
   var setColor = function(p, clr) {
     var c;
     if (typeof clr == typeof undefined) {
@@ -63,8 +63,8 @@ var graphics = (function() {
         if (typeof clr == typeof undefined) {
           c = drawing.foregroundColor;
         }
-        setColor(p, clr);
-        drawing.foregroundColor = clr;
+        setColor(p, c);
+        // drawing.foregroundColor = c; // given the code that generates Dracula's eyes, I don't think this is right.
         p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
       });
     },
@@ -81,6 +81,7 @@ var graphics = (function() {
       basic_common.process(function(p) {
         console.log("drawing: " + s);
         setColor(p, undefined);
+        // color is set by program right before sofa is drawn in drawing room; (and all sofa drawing commands have a color prefixed); based on this, I think it's right that drawStr not set the foreground color
         drawStr(drawing, s)(p);
       });
     },
@@ -116,7 +117,7 @@ var graphics = (function() {
           } else if (bf == "b") {
             p.rect(x1, y1, x2 - x1, y2 - y1)
           } else if (bf == "bf") {
-            console.log("bf: " + x1 + ", " + y1 + ", " + (x2 - x1) + ", " + (y2 - y1) + ", psetOrPreset: " + psetOrPreset);
+            // console.log("bf: " + x1 + ", " + y1 + ", " + (x2 - x1) + ", " + (y2 - y1) + ", psetOrPreset: " + psetOrPreset);
             p.fill.apply(p, color);
             p.rect(x1, y1, x2 - x1, y2 - y1)
           } else {
@@ -201,8 +202,8 @@ var graphics = (function() {
         if (i > 0) s = s + ", ";
         s = s + arguments[i];
       }
-      // insertItem(s);
-      // replay.history.push({ method: k, args: arguments });
+      insertItem(s);
+      replay.history.push({ method: k, args: arguments });
       return ret[k].apply(ret, arguments);
     };})(key);
   }

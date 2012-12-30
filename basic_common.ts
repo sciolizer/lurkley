@@ -1,4 +1,5 @@
 declare var processingQueue;
+declare var drawing;
 var basic_common = (function() {
   return {
     boundCheck: function(str, val, min, max) {
@@ -13,8 +14,10 @@ var basic_common = (function() {
       }
     },
     cocoColor: function(ii) {
-      // console.log("cocoColor: " + i);
-      var i = ii + 4; // todo: use colorset on drawing to figure out which colors to return
+      // console.log("cocoColor: " + ii);
+      // console.log("drawing.colorset: " + drawing.colorset);
+      var i = ii + (drawing.colorset % 2) * 4;
+      if (i > 8) i = i - 4; // eh
       switch (i) {
         case 0: // black
           return [0, 0, 0];
@@ -26,7 +29,7 @@ var basic_common = (function() {
           return [0, 0, 255];
         case 4: // red
           return [255, 0, 0];
-        case 5: // white
+        case 5: // white (buff)
           return [255, 255, 255];
         case 6: // cyan
           return [0, 255, 255];
@@ -34,6 +37,11 @@ var basic_common = (function() {
           return [255, 0, 255];
         case 8: // orange
           return [255, 165, 0];
+      }
+      try {
+        throw new Error();
+      } catch (e) {
+        console.log(e.stack);
       }
       throw ("unrecognized color: " + i);
     },
