@@ -64,6 +64,7 @@ var graphics = (function() {
           c = drawing.foregroundColor;
         }
         setColor(p, clr);
+        drawing.foregroundColor = clr;
         p.arc(x, y, rad, ratio * rad, start * 2 * PI, end * 2 * PI);
       });
     },
@@ -135,13 +136,13 @@ var graphics = (function() {
     },
     pcls: function(color) {
       basic_common.process(function(p) {
-        console.log("pcls foreground: " + color);
+        // console.log("pcls foreground: " + color);
         p.background.apply(p, basic_common.cocoColor(color));
       });
     },
     pclsBackground: function() {
       basic_common.process(function(p) {
-        console.log("pcls background: " + drawing.backgroundColor);
+        // console.log("pcls background: " + drawing.backgroundColor);
         p.background.apply(p, basic_common.cocoColor(drawing.backgroundColor));
       });
     },
@@ -155,6 +156,7 @@ var graphics = (function() {
       basic_common.process(function(p) {
         // console.log("pset");
         setColor(p, clr);
+        drawing.foregroundColor = clr;
         p.point(x,y);
         drawing.lastX = x;
         drawing.lastY = y;

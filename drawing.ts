@@ -2,6 +2,7 @@ declare var basic_common;
 var drawStr = function(drawing, s) {
   return function(p) {
     var segment = /(B?M[0-9]+,[0-9]+|B?U[0-9]+|B?D[0-9]+|B?L[0-9]+|B?R[0-9]+|B?E[0-9]+|B?F[0-9]+|B?G[0-9]+|B?H[0-9]+|S[0-9]+|C[0-9]+);?/g
+    var color = drawing.foregroundColor;
     var match;
     while (match = segment.exec(s)) {
       // console.log(match.slice(0));
@@ -49,7 +50,7 @@ var drawStr = function(drawing, s) {
           break;
         case "C":
           move = false;
-          drawing.foregroundColor = distance;
+          color = distance;
           break;
         case "M":
           // handled below
@@ -69,8 +70,8 @@ var drawStr = function(drawing, s) {
       }
       if (move) {
         if (!blank) {
-          p.stroke.apply(p, basic_common.cocoColor(drawing.foregroundColor));
-          p.fill.apply(p, basic_common.cocoColor(drawing.foregroundColor));
+          p.stroke.apply(p, basic_common.cocoColor(color));
+          // p.fill.apply(p, basic_common.cocoColor(color));
           p.line(drawing.lastX, drawing.lastY, newx, newy);
           // p.noStroke(); // maybe this has been the problem?
         }
