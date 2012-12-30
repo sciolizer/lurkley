@@ -1,10 +1,12 @@
 declare var basic_common;
 var drawStr = function(drawing, s) {
   return function(p) {
-    var segment = /(B?M[0-9]+,[0-9]+|B?U[0-9]+|B?D[0-9]+|B?L[0-9]+|B?R[0-9]+|B?E[0-9]+|B?F[0-9]+|B?G[0-9]+|B?H[0-9]+|S[0-9]+|C[0-9]+);?|/g
+    var segment = /(B?M[0-9]+,[0-9]+|B?U[0-9]+|B?D[0-9]+|B?L[0-9]+|B?R[0-9]+|B?E[0-9]+|B?F[0-9]+|B?G[0-9]+|B?H[0-9]+|S[0-9]+|C[0-9]+);?/g
     var match;
     while (match = segment.exec(s)) {
+      // console.log(match.slice(0));
       var text = match[0];
+      // if (text == "") continue;
       var blank;
       if (text[0] == "B") {
         blank = true;
