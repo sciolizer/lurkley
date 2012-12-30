@@ -13,6 +13,7 @@ var trs80 = (function() {
   var pg = null;
   var suspencion = [];
   var suspended = function() {
+    return false;
     return suspencion.length > 0;
   };
   var forStack = []; // [(String, Int, Int, Int, Function)]
